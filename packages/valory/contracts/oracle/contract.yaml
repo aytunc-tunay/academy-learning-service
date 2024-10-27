@@ -1,0 +1,31 @@
+name: oracle
+author: valory
+version: 0.1.0
+type: contract
+description: Oracle contract for fetching external data.
+license: Apache-2.0
+aea_version: '>=1.0.0, <2.0.0'
+fingerprint:
+  README.md: bafybeidl576kri2qertrn4qhknbvvost77stvdotcye7jtyejvxku4tvqa
+  __init__.py: bafybeif5vpc3dfrlxlch7brbhmdwksabyzddpfqgm56vdbbkek3t3br6ke
+  build/ORACLE.json: bafybeibpe5q3idjxhrcrugbncfrgbqlf4pbg3ji3um5tnwvod4ybzoxxtm
+  contract.py: bafybeibtwclyzlwopq3v6iavqalkfpxdhmxlc7jk45ibc2iptcg52cot2a
+fingerprint_ignore_patterns: []
+contracts: []
+class_name: ORACLE
+contract_interface_paths:
+  ethereum: build/ORACLE.json
+dependencies:
+  ecdsa:
+    version: '>=0.15'
+  eth_typing: {}
+  hexbytes: {}
+  open-aea-ledger-ethereum:
+    version: ==1.55.0
+  open-aea-test-autonomy:
+    version: ==0.15.2
+  packaging: {}
+  requests:
+    version: ==2.28.1
+  web3:
+    version: <7,>=6.0.0

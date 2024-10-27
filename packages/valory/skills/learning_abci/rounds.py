@@ -40,6 +40,7 @@ from packages.valory.skills.learning_abci.payloads import (
     AlternativeDataPullPayload,
     DecisionMakingPayload,
     TxPreparationPayload,
+    AnotherTxPreparationPayload,
 )
 
 
@@ -208,11 +209,10 @@ class DecisionMakingRound(CollectSameUntilThresholdRound):
 
     # Event.DONE, Event.ERROR, Event.TRANSACT, Event.ROUND_TIMEOUT  # this needs to be referenced for static checkers
 
+class AnotherTxPreparationRound(CollectSameUntilThresholdRound):
+    """AnotherTxPreparationRound"""
 
-class TxPreparationRound(CollectSameUntilThresholdRound):
-    """TxPreparationRound"""
-
-    payload_class = TxPreparationPayload
+    payload_class = AnotherTxPreparationPayload
     synchronized_data_class = SynchronizedData
     done_event = Event.DONE
     no_majority_event = Event.NO_MAJORITY
@@ -262,11 +262,11 @@ class LearningAbciApp(AbciApp[Event]):
             Event.ROUND_TIMEOUT: DecisionMakingRound,
             Event.DONE: FinishedDecisionMakingRound,
             Event.ERROR: FinishedDecisionMakingRound,
-            Event.TRANSACT: TxPreparationRound,
+            Event.TRANSACT: AnotherTxPreparationRound,
         },
-        TxPreparationRound: {
-            Event.NO_MAJORITY: TxPreparationRound,
-            Event.ROUND_TIMEOUT: TxPreparationRound,
+        AnotherTxPreparationRound: {
+            Event.NO_MAJORITY: AnotherTxPreparationRound,
+            Event.ROUND_TIMEOUT: AnotherTxPreparationRound,
             Event.DONE: FinishedTxPreparationRound,
         },
         FinishedDecisionMakingRound: {},
