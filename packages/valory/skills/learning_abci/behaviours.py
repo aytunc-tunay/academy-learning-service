@@ -332,6 +332,9 @@ class AlternativeDataPullBehaviour(LearningBaseBehaviour):  # pylint: disable=to
             # Store the price in IPFS
             price_ipfs_hash = yield from self.send_price_to_ipfs(price)
 
+            # Store the coinmarket price in IPFS dummy call
+            dummy_ipfs_hash = yield from self.send_dummy_price_to_ipfs(price)
+
             # Get the native balance
             native_balance = yield from self.get_native_balance()
 
@@ -389,6 +392,17 @@ class AlternativeDataPullBehaviour(LearningBaseBehaviour):  # pylint: disable=to
         )
         self.context.logger.info(
             f"Price data stored in IPFS: https://gateway.autonolas.tech/ipfs/{price_ipfs_hash}"
+        )
+        return price_ipfs_hash
+
+    def send_dummy_price_to_ipfs(self, price) -> Generator[None, None, Optional[str]]:
+        """Store the token price in IPFS"""
+        data = {"coinmarketcap price": price}
+        price_ipfs_hash = yield from self.send_to_ipfs(
+            filename=self.metadata_filepath, obj=data, filetype=SupportedFiletype.JSON
+        )
+        self.context.logger.info(
+            f"Dummy Price data stored in IPFS: https://gateway.autonolas.tech/ipfs/{price_ipfs_hash}"
         )
         return price_ipfs_hash
 
