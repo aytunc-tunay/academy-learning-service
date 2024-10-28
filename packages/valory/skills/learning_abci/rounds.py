@@ -35,7 +35,9 @@ from packages.valory.skills.abstract_round_abci.base import (
     get_name,
 )
 from packages.valory.skills.learning_abci.payloads import (
+    ApiSelectionPayload,
     DataPullPayload,
+    AlternativeDataPullPayload,
     DecisionMakingPayload,
     TxPreparationPayload,
 )
@@ -49,6 +51,10 @@ class Event(Enum):
     TRANSACT = "transact"
     NO_MAJORITY = "no_majority"
     ROUND_TIMEOUT = "round_timeout"
+    COINGECKO = "coingecko"
+    COINMARKETCAP = "coinmarketcap"
+
+
 
 
 class SynchronizedData(BaseSynchronizedData):
@@ -89,6 +95,11 @@ class SynchronizedData(BaseSynchronizedData):
         return self._get_deserialized("participant_to_data_round")
 
     @property
+    def api_selection(self) -> str:
+        """Get the api selection choice."""
+        return self.db.get("api_selection", "coingecko")
+
+    @property
     def most_voted_tx_hash(self) -> Optional[float]:
         """Get the token most_voted_tx_hash."""
         return self.db.get("most_voted_tx_hash", None)
@@ -103,6 +114,51 @@ class SynchronizedData(BaseSynchronizedData):
         """Get the round that submitted a tx to transaction_settlement_abci."""
         return str(self.db.get_strict("tx_submitter"))
 
+
+class ApiSelectionRound(CollectSameUntilThresholdRound):
+    """ApiSelectionRound: decides which API to use (CoinGecko or CoinMarketCap)."""
+
+    payload_class = ApiSelectionPayload
+    synchronized_data_class = SynchronizedData
+
+    def end_block(self) -> Optional[Tuple[BaseSynchronizedData, Event]]:
+        """
+        Determine the outcome based on the payloads collected from agents.
+        """
+        if self.threshold_reached:
+            if self.synchronized_data.api_selection != self.most_voted_payload:
+                updated_synchronized_data = self.synchronized_data.update(
+                    api_selection=self.most_voted_payload,
+                    synchronized_data_class=SynchronizedData
+                )
+                return updated_synchronized_data, Event.COINMARKETCAP
+            return self.synchronized_data, Event.COINGECKO
+        return None
+
+
+
+class AlternativeDataPullRound(CollectSameUntilThresholdRound):
+    """DataPullRound"""
+
+    payload_class = AlternativeDataPullPayload
+    synchronized_data_class = SynchronizedData
+    done_event = Event.DONE
+    no_majority_event = Event.NO_MAJORITY
+
+    # Collection key specifies where in the synchronized data the agento to payload mapping will be stored
+    collection_key = get_name(SynchronizedData.participant_to_data_round)
+
+    # Selection key specifies how to extract all the different objects from each agent's payload
+    # and where to store it in the synchronized data. Notice that the order follows the same order
+    # from the payload class.
+    selection_key = (
+        get_name(SynchronizedData.price),
+        get_name(SynchronizedData.price_ipfs_hash),
+        get_name(SynchronizedData.native_balance),
+        get_name(SynchronizedData.erc20_balance),
+    )
+
+    # Event.ROUND_TIMEOUT  # this needs to be referenced for static checkers
 
 class DataPullRound(CollectSameUntilThresholdRound):
     """DataPullRound"""
@@ -180,14 +236,25 @@ class FinishedTxPreparationRound(DegenerateRound):
 class LearningAbciApp(AbciApp[Event]):
     """LearningAbciApp"""
 
-    initial_round_cls: AppState = DataPullRound
+    initial_round_cls: AppState = ApiSelectionRound
     initial_states: Set[AppState] = {
-        DataPullRound,
+        ApiSelectionRound,
     }
     transition_function: AbciAppTransitionFunction = {
+        ApiSelectionRound: {
+            Event.NO_MAJORITY: ApiSelectionRound,
+            Event.ROUND_TIMEOUT: ApiSelectionRound,
+            Event.COINGECKO: DataPullRound,
+            Event.COINMARKETCAP: AlternativeDataPullRound,
+        },
         DataPullRound: {
             Event.NO_MAJORITY: DataPullRound,
             Event.ROUND_TIMEOUT: DataPullRound,
+            Event.DONE: DecisionMakingRound,
+        },
+        AlternativeDataPullRound: {
+            Event.NO_MAJORITY: AlternativeDataPullRound,
+            Event.ROUND_TIMEOUT: AlternativeDataPullRound,
             Event.DONE: DecisionMakingRound,
         },
         DecisionMakingRound: {
@@ -212,7 +279,7 @@ class LearningAbciApp(AbciApp[Event]):
     event_to_timeout: EventToTimeout = {}
     cross_period_persisted_keys: FrozenSet[str] = frozenset()
     db_pre_conditions: Dict[AppState, Set[str]] = {
-        DataPullRound: set(),
+        ApiSelectionRound: set(),
     }
     db_post_conditions: Dict[AppState, Set[str]] = {
         FinishedDecisionMakingRound: set(),
