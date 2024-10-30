@@ -27,6 +27,7 @@ from typing import Dict, Generator, Optional, Set, Type, cast
 
 from packages.valory.contracts.erc20.contract import ERC20
 from packages.valory.contracts.oracle.contract import ORACLE
+from packages.valory.contracts.simple_storage.contract import SimpleStorage
 
 from packages.valory.contracts.gnosis_safe.contract import (
     GnosisSafeContract,
@@ -853,11 +854,36 @@ class AnotherTxPreparationBehaviour(
                 amount = int(round(latest_price))
                 self.context.logger.info(f"Calculated amount based on latest ETH price: {amount}")
 
-            # All transactions need to be sent from the Safe controlled by the agents.
-            # Depending on the timestamp's last number, we will prepare a native transaction.
+            stored_value = yield from self.get_storage()
+            if stored_value is None:
+                self.context.logger.error("Failed to fetch current stored value, using default value.")
+            else:
+                self.context.logger.info(f"Current stored value: {stored_value}")
+
+            # Define a new value to set
+            new_value = stored_value + 10 
+            self.context.logger.info(f"Setting new storage value: {new_value}")
+
+            # # Set the new storage value
+            # set_success = yield from self.set_storage(new_value)
+            # if not set_success:
+            #     self.context.logger.error("Failed to set the new storage value.")
+            # else:
+            #     self.context.logger.info("Successfully set new storage value.")
+
+            # # Get the updated stored value
+            # updated_value = yield from self.get_storage()
+            # if updated_value is None:
+            #     self.context.logger.error("Failed to fetch updated storage value.")
+            # else:
+            #     self.context.logger.info(f"Updated stored value: {updated_value}")
+
+
+            # # All transactions need to be sent from the Safe controlled by the agents.
+            # # Depending on the timestamp's last number, we will prepare a native transaction.
 
             # Get the transaction hash
-            tx_hash = yield from self.get_tx_hash(amount)
+            tx_hash = yield from self.get_set_storage_tx_hash(new_value)
 
             payload = AnotherTxPreparationPayload(
                 sender=sender, tx_submitter=self.auto_behaviour_id(), tx_hash=tx_hash
@@ -887,7 +913,7 @@ class AnotherTxPreparationBehaviour(
         self.context.logger.info("Preparing a native transaction")
         tx_hash = yield from self.get_native_transfer_safe_tx_hash(amount)
         return tx_hash
-
+    
     def get_native_transfer_safe_tx_hash(self, amount: int) -> Generator[None, None, Optional[str]]:
         """Prepare a native safe transaction"""
 
@@ -937,6 +963,88 @@ class AnotherTxPreparationBehaviour(
 
         self.context.logger.info(f"The latest price ORACLE CONTRACT is {latest_price}")
         return latest_price
+
+    def get_storage(self) -> Generator[None, None, Optional[int]]:
+        """
+        Retrieve the stored value from the SimpleStorage contract.
+
+        :return: The stored value or None if an error occurs.
+        """
+        self.context.logger.info("Fetching the storage value from the SimpleStorage contract.")
+
+        # Call the contract's get function
+        response_msg = yield from self.get_contract_api_response(
+            performative=ContractApiMessage.Performative.GET_RAW_TRANSACTION,
+            contract_address="0xDEC618bA08d176655510c4BedA9A0dfAF76723eD",  # Replace with your SimpleStorage contract address
+            contract_id=str(SimpleStorage.contract_id),  # Contract ID for SimpleStorage
+            contract_callable="get_stored_data",
+            chain_id=GNOSIS_CHAIN_ID,  # Replace with the appropriate chain ID
+        )
+
+        # Check for retrieval success
+        if response_msg.performative != ContractApiMessage.Performative.RAW_TRANSACTION:
+            self.context.logger.error(f"Error retrieving storage value: {response_msg}")
+            return None
+
+        stored_value = response_msg.raw_transaction.body.get("storedData", None)
+
+        if stored_value is None:
+            self.context.logger.error("Storage value retrieval returned None.")
+            return None
+
+        self.context.logger.info(f"The stored value in SimpleStorage is {stored_value}")
+        return stored_value
+
+    def get_set_storage_tx_hash(self, value: int) -> Generator[None, None, Optional[str]]:
+        """Get the transaction hash for setting storage in the SimpleStorage contract."""
+
+        self.context.logger.info("Preparing a storage set transaction.")
+        tx_hash = yield from self.get_storage_set_safe_tx_hash(value)
+        return tx_hash
+
+    def get_storage_set_safe_tx_hash(self, value: int) -> Generator[None, None, Optional[str]]:
+        """Prepare a safe transaction specifically for setting storage in the SimpleStorage contract."""
+
+        # Get minimal transaction data for storage setting
+        tx_data = yield from self.get_storage_set_data(value)
+
+        # Build Safe transaction hash with minimal transaction data
+        safe_tx_hash = yield from self._build_safe_tx_hash(**tx_data)
+        self.context.logger.info(f"Storage set transaction hash is {safe_tx_hash}")
+
+        return safe_tx_hash
+
+    def get_storage_set_data(self, value: int) -> Generator[None, None, Dict]:
+        """Get the minimal transaction data for setting storage in the SimpleStorage contract."""
+
+        # Prepare transaction data by calling `set_stored_data` on SimpleStorage
+        response_msg = yield from self.get_contract_api_response(
+            performative=ContractApiMessage.Performative.GET_RAW_TRANSACTION,
+            contract_address="0xDEC618bA08d176655510c4BedA9A0dfAF76723eD",  # SimpleStorage contract address
+            contract_id=str(SimpleStorage.contract_id),
+            contract_callable="set_stored_data",
+            value=value,
+            chain_id=GNOSIS_CHAIN_ID,
+        )
+
+        # Check if transaction data was generated successfully
+        if response_msg.performative != ContractApiMessage.Performative.RAW_TRANSACTION:
+            self.context.logger.error(f"Failed to prepare transaction data for set_stored_data: {response_msg}")
+            return {}
+
+        transaction_data_hex = response_msg.raw_transaction.body.get("data")
+        if transaction_data_hex is None:
+            self.context.logger.error("Transaction data is missing from response.")
+            return {}
+
+        # Return minimal transaction data
+        transaction_data = {
+            "to_address": "0xDEC618bA08d176655510c4BedA9A0dfAF76723eD",  # SimpleStorage contract address
+            "data": bytes.fromhex(transaction_data_hex[2:])  # Convert hex string to bytes without "0x"
+        }
+        self.context.logger.info(f"Prepared minimal storage set transaction data: {transaction_data}")
+        
+        return transaction_data
 
     def _build_safe_tx_hash(
         self,
