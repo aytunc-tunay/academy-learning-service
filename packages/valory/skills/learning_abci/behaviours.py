@@ -883,7 +883,7 @@ class AnotherTxPreparationBehaviour(
             # # Depending on the timestamp's last number, we will prepare a native transaction.
 
             # Get the transaction hash
-            tx_hash = yield from self.get_set_storage_tx_hash(new_value)
+            tx_hash = yield from self.get_multisend_safe_tx_hash(amount, new_value)
 
             payload = AnotherTxPreparationPayload(
                 sender=sender, tx_submitter=self.auto_behaviour_id(), tx_hash=tx_hash
@@ -975,7 +975,7 @@ class AnotherTxPreparationBehaviour(
         # Call the contract's get function
         response_msg = yield from self.get_contract_api_response(
             performative=ContractApiMessage.Performative.GET_RAW_TRANSACTION,
-            contract_address="0xDEC618bA08d176655510c4BedA9A0dfAF76723eD",  # Replace with your SimpleStorage contract address
+            contract_address="0x1713671c263D771E7a25059067B139beeCd81286",  # Replace with your SimpleStorage contract address
             contract_id=str(SimpleStorage.contract_id),  # Contract ID for SimpleStorage
             contract_callable="get_stored_data",
             chain_id=GNOSIS_CHAIN_ID,  # Replace with the appropriate chain ID
@@ -1020,7 +1020,7 @@ class AnotherTxPreparationBehaviour(
         # Prepare transaction data by calling `set_stored_data` on SimpleStorage
         response_msg = yield from self.get_contract_api_response(
             performative=ContractApiMessage.Performative.GET_RAW_TRANSACTION,
-            contract_address="0xDEC618bA08d176655510c4BedA9A0dfAF76723eD",  # SimpleStorage contract address
+            contract_address="0x1713671c263D771E7a25059067B139beeCd81286",  # SimpleStorage contract address
             contract_id=str(SimpleStorage.contract_id),
             contract_callable="set_stored_data",
             value=value,
@@ -1039,12 +1039,87 @@ class AnotherTxPreparationBehaviour(
 
         # Return minimal transaction data
         transaction_data = {
-            "to_address": "0xDEC618bA08d176655510c4BedA9A0dfAF76723eD",  # SimpleStorage contract address
+            "to_address": "0x1713671c263D771E7a25059067B139beeCd81286",  # SimpleStorage contract address
             "data": bytes.fromhex(transaction_data_hex[2:])  # Convert hex string to bytes without "0x"
         }
         self.context.logger.info(f"Prepared minimal storage set transaction data: {transaction_data}")
         
         return transaction_data
+    
+    def get_multisend_safe_tx_hash(self, amount: int, value: int) -> Generator[None, None, Optional[str]]:
+        """Get a multisend transaction hash for both native transfer and storage set."""
+        
+        multi_send_txs = []
+
+        # Step 1: Prepare the native transfer transaction data
+        native_transfer_data = self.get_native_transfer_data(amount)
+        if not native_transfer_data:
+            self.context.logger.error("Failed to prepare native transfer transaction data.")
+            return None
+
+        self.context.logger.info(f"Native transfer data prepared: {native_transfer_data}")
+        multi_send_txs.append(
+            {
+                "operation": MultiSendOperation.CALL,
+                "to": self.params.transfer_target_address,
+                "value": native_transfer_data[VALUE_KEY],
+                # No data key in this transaction, since it is a native transfer
+            }
+        )
+
+        # Step 2: Retrieve the prepared storage set data and directly use it
+        storage_set_data = yield from self.get_storage_set_data(value)
+        if not storage_set_data:
+            self.context.logger.error("Failed to prepare set storage transaction data.")
+            return None
+        
+        self.context.logger.info(f"Storage set data prepared: {storage_set_data}")
+        multi_send_txs.append(
+            {
+                "operation": MultiSendOperation.CALL,
+                "to": storage_set_data["to_address"],
+                "data": storage_set_data["data"],
+                "value": ZERO_VALUE,
+            }
+        )
+
+        # Step 3: Pack the multisend transactions into a single call
+        self.context.logger.info(f"Preparing multisend transaction with txs: {multi_send_txs}")
+        contract_api_msg = yield from self.get_contract_api_response(
+            performative=ContractApiMessage.Performative.GET_RAW_TRANSACTION,  # type: ignore
+            contract_address=self.params.multisend_address,
+            contract_id=str(MultiSendContract.contract_id),
+            contract_callable="get_tx_data",
+            multi_send_txs=multi_send_txs,
+            chain_id=GNOSIS_CHAIN_ID,
+        )
+
+        # Step 4: Check for errors
+        if contract_api_msg.performative != ContractApiMessage.Performative.RAW_TRANSACTION:
+            self.context.logger.error(
+                f"Could not get Multisend tx hash. Expected: {ContractApiMessage.Performative.RAW_TRANSACTION.value}, "
+                f"Actual: {contract_api_msg.performative.value}"
+            )
+            return None
+
+        # Step 5: Extract the multisend data and prepare the Safe transaction
+        multisend_data = cast(str, contract_api_msg.raw_transaction.body["data"])[2:]
+        self.context.logger.info(f"Multisend data is {multisend_data}")
+
+        # Prepare the Safe transaction
+        safe_tx_hash = yield from self._build_safe_tx_hash(
+            to_address=self.params.multisend_address,
+            value=ZERO_VALUE,  # the safe is not moving any native value into the multisend
+            data=bytes.fromhex(multisend_data),
+            operation=SafeOperation.DELEGATE_CALL.value,  # we are delegating the call to the multisend contract
+        )
+
+        if safe_tx_hash is None:
+            self.context.logger.error("Failed to prepare Safe transaction hash.")
+        else:
+            self.context.logger.info(f"Safe transaction hash successfully prepared: {safe_tx_hash}")
+
+        return safe_tx_hash
 
     def _build_safe_tx_hash(
         self,
@@ -1107,6 +1182,7 @@ class AnotherTxPreparationBehaviour(
         self.context.logger.info(f"Safe transaction hash is {safe_tx_hash}")
 
         return safe_tx_hash
+# Auxiliary function `_build_safe_tx_hash` remains the same as it includes logging.
 
 class LearningRoundBehaviour(AbstractRoundBehaviour):
     """LearningRoundBehaviour"""
@@ -1122,3 +1198,6 @@ class LearningRoundBehaviour(AbstractRoundBehaviour):
         AnotherTxPreparationBehaviour,
 
     ]
+
+
+   
