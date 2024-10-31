@@ -34,8 +34,9 @@ protocols:
 skills:
 - valory/abstract_abci:0.1.0:bafybeihu2bcgjk2tqjiq2zhk3uogtfszqn4osvdt7ho3fubdpdj4jgdfjm
 - valory/abstract_round_abci:0.1.0:bafybeibovsktd3uxur45nrcomq5shcn46cgxd5idmhxbmjhg32c5abyqim
-- valory/learning_abci:0.1.0:bafybeidc4a6vvrt2ht5uqnjf4hjn6chi4szru24k4jjwsn7dy5hrytgy2u
-- valory/learning_chained_abci:0.1.0:bafybeibvpccnrhhbcw2r5aik37rqg4f5fphtxkpkmikv2ku6nm3j3nrpkq
+- valory/learning_abci:0.1.0:bafybeifvu7zzh6tve5qhwpfprczer5hpep6466r4hp7gtbhwfzngayiq7a
+- valory/hello_world_abci:0.1.0:bafybeidk36v4wb6lt5ljxweatkv6qs5pbyp2v72lfhzkdzjmraeug5wqte
+- valory/learning_chained_abci:0.1.0:bafybeid4v5zgpj2hceblfowag5goz7zmkfcd6qi2j4uixvk2lstz6puqd4
 - valory/registration_abci:0.1.0:bafybeicnth5q4httefsusywx3zrrq4al47owvge72dqf2fziruicq6hqta
 - valory/reset_pause_abci:0.1.0:bafybeievjciqdvxhqxfjd4whqs27h6qbxqzrae7wwj7fpvxlvmtw3x35im
 - valory/termination_abci:0.1.0:bafybeid54buqxipiuduw7b6nnliiwsxajnltseuroad53wukfonpxca2om
@@ -96,6 +97,28 @@ config:
       chain_id: ${int:1337}
       poa_chain: ${bool:false}
       default_gas_price_strategy: ${str:eip1559}
+---
+public_id: valory/hello_world_abci:0.1.0
+type: skill
+models:
+  benchmark_tool:
+    args:
+      log_dir: ${str:/benchmarks}
+  params:
+    args:
+      hello_world_message: ${str:"HELLO_WORLD!"}
+      owner_address: ${str:"0xtestaddress!"}
+      reset_pause_duration: ${int:10}
+      service_registry_address: ${str:null}
+      share_tm_config_on_startup: ${bool:false}
+      on_chain_service_id: ${int:null}
+      setup:
+        all_participants: ${list:[]}
+        safe_contract_address: ${str:'0x0000000000000000000000000000000000000000'}
+        consensus_threshold: ${int:null}
+      tendermint_url: ${str:http://localhost:26657}
+      tendermint_com_url: ${str:http://localhost:8080}
+      tendermint_p2p_url: ${str:localhost:26656}
 ---
 public_id: valory/p2p_libp2p_client:0.1.0
 type: connection

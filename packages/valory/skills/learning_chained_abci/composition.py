@@ -20,6 +20,7 @@
 """This package contains round behaviours of LearningChainedSkillAbciApp."""
 
 import packages.valory.skills.learning_abci.rounds as LearningAbci
+import packages.valory.skills.hello_world_abci.rounds as HelloWorldAbci
 import packages.valory.skills.registration_abci.rounds as RegistrationAbci
 import packages.valory.skills.reset_pause_abci.rounds as ResetAndPauseAbci
 import packages.valory.skills.transaction_settlement_abci.rounds as TxSettlementAbci
@@ -30,18 +31,19 @@ from packages.valory.skills.abstract_round_abci.abci_app_chain import (
 from packages.valory.skills.abstract_round_abci.base import BackgroundAppConfig
 from packages.valory.skills.termination_abci.rounds import (
     BackgroundRound,
-    Event,
+    Event, 
     TerminationAbciApp,
 )
 
 
 abci_app_transition_mapping: AbciAppTransitionMapping = {
-    RegistrationAbci.FinishedRegistrationRound: LearningAbci.ApiSelectionRound,
+    RegistrationAbci.FinishedRegistrationRound: HelloWorldAbci.CollectRandomnessRound,
+    HelloWorldAbci.FinishedHelloWorldRound: LearningAbci.ApiSelectionRound,
     LearningAbci.FinishedDecisionMakingRound: ResetAndPauseAbci.ResetAndPauseRound,
     LearningAbci.FinishedTxPreparationRound: TxSettlementAbci.RandomnessTransactionSubmissionRound,
     TxSettlementAbci.FinishedTransactionSubmissionRound: ResetAndPauseAbci.ResetAndPauseRound,
     TxSettlementAbci.FailedRound: TxSettlementAbci.RandomnessTransactionSubmissionRound,
-    ResetAndPauseAbci.FinishedResetAndPauseRound: LearningAbci.ApiSelectionRound,
+    ResetAndPauseAbci.FinishedResetAndPauseRound: HelloWorldAbci.CollectRandomnessRound,
     ResetAndPauseAbci.FinishedResetAndPauseErrorRound: RegistrationAbci.RegistrationRound,
 }
 
@@ -54,6 +56,7 @@ termination_config = BackgroundAppConfig(
 LearningChainedSkillAbciApp = chain(
     (
         RegistrationAbci.AgentRegistrationAbciApp,
+        HelloWorldAbci.HelloWorldAbciApp,
         LearningAbci.LearningAbciApp,
         TxSettlementAbci.TransactionSubmissionAbciApp,
         ResetAndPauseAbci.ResetPauseAbciApp,
