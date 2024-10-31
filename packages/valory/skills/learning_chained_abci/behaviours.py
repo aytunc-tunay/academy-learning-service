@@ -26,6 +26,10 @@ from packages.valory.skills.abstract_round_abci.behaviours import (
     BaseBehaviour,
 )
 from packages.valory.skills.learning_abci.behaviours import LearningRoundBehaviour
+
+from packages.valory.skills.hello_world_abci.behaviours import HelloWorldRoundBehaviour
+
+
 from packages.valory.skills.learning_chained_abci.composition import (
     LearningChainedSkillAbciApp,
 )
@@ -56,5 +60,6 @@ class LearningChainedConsensusBehaviour(AbstractRoundBehaviour):
         *TransactionSettlementRoundBehaviour.behaviours,
         *TerminationAbciBehaviours.behaviours,
         *LearningRoundBehaviour.behaviours,
+        *HelloWorldRoundBehaviour.behaviours,
     }
     background_behaviours_cls = {BackgroundBehaviour}

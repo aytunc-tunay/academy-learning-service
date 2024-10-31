@@ -29,7 +29,11 @@ from packages.valory.skills.abstract_round_abci.tests.data.dummy_abci.models imp
 from packages.valory.skills.learning_abci.models import (
     CoingeckoSpecs as BaseCoingeckoSpecs,
 )
+from packages.valory.skills.learning_abci.models import (
+    CoinMarketCapSpecs as BaseCoinMarketCapSpecs,
+)
 from packages.valory.skills.learning_abci.models import Params as LearningParams
+from packages.valory.skills.hello_world_abci.models import Params as HelloWorldParams
 from packages.valory.skills.learning_abci.models import SharedState as BaseSharedState
 from packages.valory.skills.learning_abci.rounds import Event as LearningEvent
 from packages.valory.skills.learning_chained_abci.composition import (
@@ -73,9 +77,14 @@ class SharedState(BaseSharedState):
 class Params(  # pylint: disable=too-many-ancestors
     LearningParams,
     TerminationParams,
+    HelloWorldParams,
 ):
     """A model to represent params for multiple abci apps."""
 
 
 class CoingeckoSpecs(BaseCoingeckoSpecs):
     """A model that wraps ApiSpecs for Coingecko API."""
+
+class CoinMarketCapSpecs(BaseCoinMarketCapSpecs):
+    """A model that wraps ApiSpecs for CoinMarketCap API."""
+

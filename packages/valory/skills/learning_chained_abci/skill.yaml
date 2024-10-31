@@ -7,12 +7,12 @@ license: Apache-2.0
 aea_version: '>=1.0.0, <2.0.0'
 fingerprint:
   __init__.py: bafybeihu5y5llhaefw32jodf2nc2x5tig7cfo2fallbodv6vodczunpbve
-  behaviours.py: bafybeiagipms5gfebqysx5sl4dhydppceqv4aga64ibqgygqczbh4imyxu
-  composition.py: bafybeib64i3h7vmimsjflc37j4s5feipiar7hib5ixdwbadphjezq5z4cu
+  behaviours.py: bafybeiagg5scqezw7nasolshq6fmmfdqjy3ostfdxwb7j3za62ghiqscgm
+  composition.py: bafybeic3nyiqkpbyuye4ujnks5iw76atbepfrhhzsriebcwzfxlvtryyem
   dialogues.py: bafybeiakqfqcpg7yrxt4bsyernhy5p77tci4qhmgqqjqi3ttx7zk6sklca
   fsm_specification.yaml: bafybeibhguliurgppqgues6zhy3e3pioacgapilid7j26u4pmfsump5ape
   handlers.py: bafybeicru4lanvektcppxpecul4zwjfuaxseopxtsxrfzmbfaz5qk4m67q
-  models.py: bafybeico4qysu652lznxwxfamsu43d7llstplca5eqcwnmwg66fxmzt4qe
+  models.py: bafybeidogdu6dairgbybnlxhtbzq67434z7tgu7rjslwfftdfsmdawuhtq
 fingerprint_ignore_patterns: []
 connections: []
 contracts: []
@@ -22,7 +22,8 @@ skills:
 - valory/registration_abci:0.1.0:bafybeicnth5q4httefsusywx3zrrq4al47owvge72dqf2fziruicq6hqta
 - valory/reset_pause_abci:0.1.0:bafybeievjciqdvxhqxfjd4whqs27h6qbxqzrae7wwj7fpvxlvmtw3x35im
 - valory/termination_abci:0.1.0:bafybeid54buqxipiuduw7b6nnliiwsxajnltseuroad53wukfonpxca2om
-- valory/learning_abci:0.1.0:bafybeih2g2tlqwh4dmvlqiielp3e4ogys7bqxdebkdz6wmztfetdtmsu3i
+- valory/learning_abci:0.1.0:bafybeifvu7zzh6tve5qhwpfprczer5hpep6466r4hp7gtbhwfzngayiq7a
+- valory/hello_world_abci:0.1.0:bafybeidk36v4wb6lt5ljxweatkv6qs5pbyp2v72lfhzkdzjmraeug5wqte
 - valory/transaction_settlement_abci:0.1.0:bafybeihq2yenstblmaadzcjousowj5kfn5l7ns5pxweq2gcrsczfyq5wzm
 behaviours:
   main:
@@ -73,6 +74,8 @@ models:
   params:
     args:
       cleanup_history_depth: 1
+      hello_world_message: HelloWorld!
+      owner_address: 0xtestaddress
       cleanup_history_depth_current: null
       drand_public_key: 868f005eb8e6e4ca0a47c8a77ceaa5309a47978a7c71bc5cce96366b5d7a569937c529eeda66c7293784a9402801af31
       genesis_config:
@@ -139,6 +142,7 @@ models:
       default_chain_id: gnosis
       transfer_target_address: '0x0000000000000000000000000000000000000000'
       olas_token_address: '0xcE11e14225575945b8E6Dc0D4F2dD4C570f79d9f'
+      api_selection: ''
     class_name: Params
   coingecko_specs:
     args:
@@ -155,6 +159,21 @@ models:
       retries: 5
       url: https://api.coingecko.com/api/v3/simple/price
     class_name: CoingeckoSpecs
+  coinmarketcap_specs:
+    args:
+      api_id: coinmarketcap
+      headers:
+        Accept: application/json
+      method: GET
+      parameters:
+        symbol: OLAS
+        convert: USD
+        CMC_PRO_API_KEY: null
+      response_type: dict
+      response_key: data
+      retries: 5
+      url: https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest
+    class_name: CoinMarketCapSpecs
   randomness_api:
     args:
       api_id: cloudflare
