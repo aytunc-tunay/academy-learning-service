@@ -61,9 +61,27 @@ class Params(BaseParams):
         self.olas_token_address = self._ensure("olas_token_address", kwargs, str)
 
         # multisend address is used in other skills, so we cannot pop it using _ensure
-        self.multisend_address = kwargs.get("multisend_address", "")
+        self.multisend_address = kwargs.get("multisend_address", None)
+
+        # Rebalancing settings
+        self.tokens_to_rebalance: List[str] = self._ensure("tokens_to_rebalance", kwargs, list)
+        self.target_percentages: List[float] = self._ensure("target_percentages", kwargs, list)
+        self.variation_threshold: float = self._ensure("variation_threshold", kwargs, float)
+        self.portfolio_address_string: str = self._ensure("portfolio_address", kwargs, str)
+        self.safe_address: str = kwargs.get("setup", {}).get("safe_contract_address", "")
+
+
 
         super().__init__(*args, **kwargs)
+
+    def validate_params(self) -> None:
+        """Validate that the token rebalancing parameters are set correctly."""
+        if len(self.tokens_to_rebalance) != len(self.target_percentages):
+            raise ValueError("The number of tokens must match the number of target percentages.")
+        if sum(self.target_percentages) != 100:
+            raise ValueError("Target percentages must sum to 100.")
+        if not 0 <= self.variation_threshold <= 100:
+            raise ValueError("Variation threshold must be between 0 and 100.")
 
 
 class CoingeckoSpecs(ApiSpecs):

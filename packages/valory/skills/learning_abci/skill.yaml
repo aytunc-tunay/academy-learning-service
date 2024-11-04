@@ -7,20 +7,19 @@ license: Apache-2.0
 aea_version: '>=1.0.0, <2.0.0'
 fingerprint:
   __init__.py: bafybeiho3lkochqpmes4f235chq26oggmwnol3vjuvhosleoubbjirbwaq
-  behaviours.py: bafybeib7paslmxhzjvvbupjxqjdwx3iu4bqfz24w23wgtmgoijsr3z3uta
+  behaviours.py: bafybeihl2yieqiqlnl5hajvmmohixgj5evyvkpmvhuopfpm6hgzoyplh2y
   dialogues.py: bafybeifqjbumctlffx2xvpga2kcenezhe47qhksvgmaylyp5ypwqgfar5u
   fsm_specification.yaml: bafybeigbbydxuqephdpatb3fp3sxnvr77bfvvo5hwjimxfpgyl32wupe64
   handlers.py: bafybeigjadr4thz6hfpfx5abezbwnqhbxmachf4efasrn4z2vqhsqgnyvi
-  models.py: bafybeicwsirrf6pxfy3kjbemgjaebzxr6r3o662glwaydbsf5toa42tcqm
-  payloads.py: bafybeidaoav4hgdz24rdngywialhk63hcufvdhgywjz4w64hcanvifmz2e
-  rounds.py: bafybeihy7anqoaipuxw35cwndeek2ojklu4wnondosn3mxbeghh6ddeoia
+  models.py: bafybeifx6hlit5mcc35i6qbjazwdkewpr5e2hu3icoef5etmt7o3uaed2i
+  payloads.py: bafybeiemzg47slxktqzp334menptrzrljxbdy37lme37fha6aos7jxscwe
+  rounds.py: bafybeihi7un2mxjhejtkgpytryzragpmo2jm26zjsihud5sxymf6dtv4be
 fingerprint_ignore_patterns: []
 connections: []
 contracts:
 - valory/gnosis_safe:0.1.0:bafybeiho6sbfts3zk3mftrngw37d5qnlvkqtnttt3fzexmcwkeevhu4wwi
 - valory/erc20:0.1.0:bafybeibk2y6ldylquuikk3cmtk64e2wnjbtuxy5doorzsp4ysx6uwqbdxm
-- valory/oracle:0.1.0:bafybeihnxwri2faiflv37xvfw44cqhe5zvdqrdwh4v25jj33imj53gcjsy
-- valory/simple_storage:0.1.0:bafybeiabjie564yuizzhwebmdcr55jxjfljqctyvjf4sfhoo64fmneronu
+- valory/mock_dex:0.1.0:bafybeiccnmwhrqvb43bmt765rszkil6qplkpqk555zgc2hle3h7qdwpyc4
 - valory/multisend:0.1.0:bafybeig5byt5urg2d2bsecufxe5ql7f4mezg3mekfleeh32nmuusx66p4y
 protocols:
 - valory/contract_api:1.0.0:bafybeidgu7o5llh26xp3u3ebq3yluull5lupiyeu6iooi2xyymdrgnzq5i
@@ -133,7 +132,11 @@ models:
       transfer_target_address: '0x0000000000000000000000000000000000000000'
       olas_token_address: '0xcE11e14225575945b8E6Dc0D4F2dD4C570f79d9f'
       multisend_address: '0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761'
+      portfolio_address: ''
       api_selection: ''
+      tokens_to_rebalance: null
+      target_percentages: null
+      variation_threshold: null
     class_name: Params
   coingecko_specs:
     args:
@@ -157,7 +160,7 @@ models:
         Accept: application/json
       method: GET
       parameters:
-        symbol: OLAS
+        symbol: ETH
         convert: USD
         CMC_PRO_API_KEY: null
       response_type: dict

@@ -71,29 +71,29 @@ class SynchronizedData(BaseSynchronizedData):
         return CollectionRound.deserialize_collection(serialized)
 
     @property
-    def price(self) -> Optional[float]:
-        """Get the token price."""
-        return self.db.get("price", None)
+    def token_values(self) -> Optional[str]:
+        """Get the token values."""
+        return self.db.get("token_values", None)
 
     @property
-    def price_ipfs_hash(self) -> Optional[str]:
-        """Get the price_ipfs_hash."""
-        return self.db.get("price_ipfs_hash", None)
+    def total_portfolio_value(self) -> Optional[float]:
+        """Get the total portfolio value."""
+        return self.db.get("total_portfolio_value", None)
 
     @property
-    def native_balance(self) -> Optional[float]:
-        """Get the native balance."""
-        return self.db.get("native_balance", None)
-
-    @property
-    def erc20_balance(self) -> Optional[float]:
-        """Get the erc20 balance."""
-        return self.db.get("erc20_balance", None)
+    def adjustment_balances(self) -> Optional[str]:
+        """Get the total adjsutment balances."""
+        return self.db.get("adjustment_balances", None)
 
     @property
     def participant_to_data_round(self) -> DeserializedCollection:
         """Agent to payload mapping for the DataPullRound."""
         return self._get_deserialized("participant_to_data_round")
+
+    @property
+    def participant_to_decision_making_round(self) -> DeserializedCollection:
+        """Agent to payload mapping for the DecisionMakingRound."""
+        return self._get_deserialized("participant_to_decision_making_round")
 
     @property
     def api_selection(self) -> str:
@@ -153,10 +153,8 @@ class AlternativeDataPullRound(CollectSameUntilThresholdRound):
     # and where to store it in the synchronized data. Notice that the order follows the same order
     # from the payload class.
     selection_key = (
-        get_name(SynchronizedData.price),
-        get_name(SynchronizedData.price_ipfs_hash),
-        get_name(SynchronizedData.native_balance),
-        get_name(SynchronizedData.erc20_balance),
+        get_name(SynchronizedData.token_values),
+        get_name(SynchronizedData.total_portfolio_value),
     )
 
     # Event.ROUND_TIMEOUT  # this needs to be referenced for static checkers
@@ -176,14 +174,12 @@ class DataPullRound(CollectSameUntilThresholdRound):
     # and where to store it in the synchronized data. Notice that the order follows the same order
     # from the payload class.
     selection_key = (
-        get_name(SynchronizedData.price),
-        get_name(SynchronizedData.price_ipfs_hash),
-        get_name(SynchronizedData.native_balance),
-        get_name(SynchronizedData.erc20_balance),
+        get_name(SynchronizedData.token_values),
+        get_name(SynchronizedData.total_portfolio_value),
+
     )
 
     # Event.ROUND_TIMEOUT  # this needs to be referenced for static checkers
-
 
 class DecisionMakingRound(CollectSameUntilThresholdRound):
     """DecisionMakingRound"""
@@ -191,14 +187,38 @@ class DecisionMakingRound(CollectSameUntilThresholdRound):
     payload_class = DecisionMakingPayload
     synchronized_data_class = SynchronizedData
 
-    # Since we need to execute some actions after consensus, we override the end_block method
-    # instead of just setting the selection and collection keys
+    # Define collection and selection keys
+    collection_key = get_name(SynchronizedData.participant_to_decision_making_round)
+    selection_key = (
+        get_name(SynchronizedData.adjustment_balances),
+    )
+
     def end_block(self) -> Optional[Tuple[BaseSynchronizedData, Event]]:
         """Process the end of the block."""
 
         if self.threshold_reached:
-            event = Event(self.most_voted_payload)
-            return self.synchronized_data, event
+            # Search for the payload matching the most voted event
+            most_voted_payload_data = None
+            for payload in self.collection.values():
+                if payload.event == self.most_voted_payload:
+                    most_voted_payload_data = payload
+                    break
+
+            if most_voted_payload_data is None:
+                self.context.logger.error("Most voted payload data not found.")
+                return self.synchronized_data, Event.ERROR
+
+            # Extract `adjustment_balances` and update synchronized data
+            adjustment_balances = most_voted_payload_data.adjustment_balances
+            if adjustment_balances is not None:
+                new_synchronized_data = self.synchronized_data.update(
+                    adjustment_balances=adjustment_balances
+                )
+            else:
+                self.context.logger.warning("Adjustment balances not found in payload.")
+                return self.synchronized_data, Event.ERROR
+
+            return new_synchronized_data, Event.TRANSACT
 
         if not self.is_majority_possible(
             self.collection, self.synchronized_data.nb_participants
@@ -206,8 +226,6 @@ class DecisionMakingRound(CollectSameUntilThresholdRound):
             return self.synchronized_data, Event.NO_MAJORITY
 
         return None
-
-    # Event.DONE, Event.ERROR, Event.TRANSACT, Event.ROUND_TIMEOUT  # this needs to be referenced for static checkers
 
 class AnotherTxPreparationRound(CollectSameUntilThresholdRound):
     """AnotherTxPreparationRound"""

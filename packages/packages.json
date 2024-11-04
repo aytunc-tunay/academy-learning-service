@@ -3,10 +3,12 @@
         "contract/valory/erc20/0.1.0": "bafybeibk2y6ldylquuikk3cmtk64e2wnjbtuxy5doorzsp4ysx6uwqbdxm",
         "contract/valory/oracle/0.1.0": "bafybeihnxwri2faiflv37xvfw44cqhe5zvdqrdwh4v25jj33imj53gcjsy",
         "contract/valory/simple_storage/0.1.0": "bafybeiabjie564yuizzhwebmdcr55jxjfljqctyvjf4sfhoo64fmneronu",
-        "skill/valory/learning_abci/0.1.0": "bafybeidc4a6vvrt2ht5uqnjf4hjn6chi4szru24k4jjwsn7dy5hrytgy2u",
-        "skill/valory/learning_chained_abci/0.1.0": "bafybeibvpccnrhhbcw2r5aik37rqg4f5fphtxkpkmikv2ku6nm3j3nrpkq",
-        "agent/valory/learning_agent/0.1.0": "bafybeid6af5jim4ttuwh4atgtlpd75tr52ejdmo4tnerniheucjfjp3cpq",
-        "service/valory/learning_service/0.1.0": "bafybeib6kon7l6ikgthyxfddj7kmfaktqmyflca3pr6wes3mtz2vm425um"
+        "contract/valory/mock_dex/0.1.0": "bafybeiccnmwhrqvb43bmt765rszkil6qplkpqk555zgc2hle3h7qdwpyc4",
+        "skill/valory/learning_abci/0.1.0": "bafybeievybvw7xc4khox27anzpldzcrdhp5ihoe4eabc6xsinnfvcet3y4",
+        "skill/valory/learning_chained_abci/0.1.0": "bafybeicbzjuy73oe7paarmw7h7kwdmhw6sj2npa467leod2qqfg4kvm4z4",
+        "skill/valory/hello_world_abci/0.1.0": "bafybeigrlhenc4s7i3k7j4alkeuv7ltxijxepteijv53zev5gojvn65p2m",
+        "agent/valory/learning_agent/0.1.0": "bafybeicktn7uqg6ts2xfej52lqqdfiql7oiqhvz7yclmgi3n55h3bffune",
+        "service/valory/learning_service/0.1.0": "bafybeibnen2p7vkxseug2tce3t6rx5iqiv6o4ppqz4ahthmwdryuh7pz7a"
     },
     "third_party": {
         "protocol/open_aea/signing/1.0.0": "bafybeihv62fim3wl2bayavfcg3u5e5cxu3b7brtu4cn5xoxd6lqwachasi",

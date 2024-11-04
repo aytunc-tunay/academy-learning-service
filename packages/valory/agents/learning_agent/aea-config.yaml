@@ -34,8 +34,8 @@ protocols:
 skills:
 - valory/abstract_abci:0.1.0:bafybeihu2bcgjk2tqjiq2zhk3uogtfszqn4osvdt7ho3fubdpdj4jgdfjm
 - valory/abstract_round_abci:0.1.0:bafybeibovsktd3uxur45nrcomq5shcn46cgxd5idmhxbmjhg32c5abyqim
-- valory/learning_abci:0.1.0:bafybeidc4a6vvrt2ht5uqnjf4hjn6chi4szru24k4jjwsn7dy5hrytgy2u
-- valory/learning_chained_abci:0.1.0:bafybeibvpccnrhhbcw2r5aik37rqg4f5fphtxkpkmikv2ku6nm3j3nrpkq
+- valory/learning_abci:0.1.0:bafybeievybvw7xc4khox27anzpldzcrdhp5ihoe4eabc6xsinnfvcet3y4
+- valory/learning_chained_abci:0.1.0:bafybeicbzjuy73oe7paarmw7h7kwdmhw6sj2npa467leod2qqfg4kvm4z4
 - valory/registration_abci:0.1.0:bafybeicnth5q4httefsusywx3zrrq4al47owvge72dqf2fziruicq6hqta
 - valory/reset_pause_abci:0.1.0:bafybeievjciqdvxhqxfjd4whqs27h6qbxqzrae7wwj7fpvxlvmtw3x35im
 - valory/termination_abci:0.1.0:bafybeid54buqxipiuduw7b6nnliiwsxajnltseuroad53wukfonpxca2om
@@ -192,7 +192,15 @@ models:
       termination_from_block: ${int:34088325}
       transfer_target_address: ${str:0x0000000000000000000000000000000000000000}
       olas_token_address: ${str:0xcE11e14225575945b8E6Dc0D4F2dD4C570f79d9f}
-      api_selection: coinmarketcap
+      api_selection: coingecko
+      portfolio_address: ${str:0xFA1FC163deeaE7Bded993Cf9aFd4A4B9ae6b3639}
+      tokens_to_rebalance:
+      - ETH
+      - USDC
+      target_percentages:
+      - 80.0
+      - 20.0
+      variation_threshold: 3.0
   coingecko_specs:
     args:
       api_id: coingecko
@@ -200,10 +208,10 @@ models:
         Accept: application/json
       method: GET
       parameters:
-        ids: autonolas
+        ids: ${str:null}
         vs_currencies: usd
         x_cg_demo_api_key: ${str:null}
-      response_key: autonolas
+      response_key: ${str:null}
       response_type: dict
       retries: 5
       url: https://api.coingecko.com/api/v3/simple/price
@@ -214,7 +222,7 @@ models:
         Accept: application/json
       method: GET
       parameters:
-        symbol: OLAS
+        symbol: ${str:null}
         convert: USD
         CMC_PRO_API_KEY: ${str:null}
       response_type: dict

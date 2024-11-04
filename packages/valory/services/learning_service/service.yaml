@@ -7,7 +7,7 @@ license: Apache-2.0
 fingerprint:
   README.md: bafybeid42pdrf6qrohedylj4ijrss236ai6geqgf3he44huowiuf7pl464
 fingerprint_ignore_patterns: []
-agent: valory/learning_agent:0.1.0:bafybeidcltai5mbfe6qv6kx5lwjsrchbejigwxvbpfzx46o76brwwonspi
+agent: valory/learning_agent:0.1.0:bafybeicktn7uqg6ts2xfej52lqqdfiql7oiqhvz7yclmgi3n55h3bffune
 number_of_agents: 4
 deployment:
   agent:
@@ -344,7 +344,7 @@ extra:
           Accept: application/json
         method: GET
         parameters:
-          symbol: OLAS
+          symbol: ETH
           convert: USD
           CMC_PRO_API_KEY: ${COINMARKETCAP_API_KEY:str:null}
         response_type: dict
