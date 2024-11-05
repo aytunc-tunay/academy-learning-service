@@ -28,16 +28,21 @@ The Portfolio Rebalancer interacts with a mock decentralized exchange (DEX) cont
     ```bash
     git clone git@github.com:aytunc-tunay/academy-learning-service.git
     ```
-
-2. Create the virtual environment:
+2. Change the branch:
 
     ```bash
     cd academy-learning-service
+    git checkout session8_final_project
+    ```
+
+3. Create the virtual environment:
+
+    ```bash
     poetry shell
     poetry install
     ```
 
-3. Sync packages:
+4. Sync packages:
 
     ```bash
     autonomy packages sync --update-packages
