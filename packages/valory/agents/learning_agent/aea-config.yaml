@@ -20,6 +20,8 @@ contracts:
 - valory/multisend:0.1.0:bafybeig5byt5urg2d2bsecufxe5ql7f4mezg3mekfleeh32nmuusx66p4y
 - valory/service_registry:0.1.0:bafybeieqgcuxmz4uxvlyb62mfsf33qy4xwa5lrij4vvcmrtcsfkng43oyq
 - valory/erc20:0.1.0:bafybeibk2y6ldylquuikk3cmtk64e2wnjbtuxy5doorzsp4ysx6uwqbdxm
+- valory/oracle:0.1.0:bafybeihnxwri2faiflv37xvfw44cqhe5zvdqrdwh4v25jj33imj53gcjsy
+- valory/simple_storage:0.1.0:bafybeifeqijbmbmslpd6tf3eitzyb5meelw32qzerpajhxbt3wo6hrxbyq
 protocols:
 - open_aea/signing:1.0.0:bafybeihv62fim3wl2bayavfcg3u5e5cxu3b7brtu4cn5xoxd6lqwachasi
 - valory/abci:0.1.0:bafybeiaqmp7kocbfdboksayeqhkbrynvlfzsx4uy4x6nohywnmaig4an7u
@@ -32,8 +34,8 @@ protocols:
 skills:
 - valory/abstract_abci:0.1.0:bafybeihu2bcgjk2tqjiq2zhk3uogtfszqn4osvdt7ho3fubdpdj4jgdfjm
 - valory/abstract_round_abci:0.1.0:bafybeibovsktd3uxur45nrcomq5shcn46cgxd5idmhxbmjhg32c5abyqim
-- valory/learning_abci:0.1.0:bafybeih2g2tlqwh4dmvlqiielp3e4ogys7bqxdebkdz6wmztfetdtmsu3i
-- valory/learning_chained_abci:0.1.0:bafybeichwyiomzdi6ukountryerhae3j53k6at4nk7id2mmkrn26wano6q
+- valory/learning_abci:0.1.0:bafybeibylubdval66umo2fmnt7224f6tdblhn3zrrwxtcyth4gq6v4llwu
+- valory/learning_chained_abci:0.1.0:bafybeibaw4kr6onr7noe5uyxxj4nfqtixfdhrvq34ath7v6mlj4hxjhpnu
 - valory/registration_abci:0.1.0:bafybeicnth5q4httefsusywx3zrrq4al47owvge72dqf2fziruicq6hqta
 - valory/reset_pause_abci:0.1.0:bafybeievjciqdvxhqxfjd4whqs27h6qbxqzrae7wwj7fpvxlvmtw3x35im
 - valory/termination_abci:0.1.0:bafybeid54buqxipiuduw7b6nnliiwsxajnltseuroad53wukfonpxca2om
@@ -85,8 +87,8 @@ type: connection
 config:
   ledger_apis:
     ethereum:
-      address: ${str:http://localhost:8545}
-      chain_id: ${int:31337}
+      address: ${str:https://misty-wider-scion.quiknode.pro/<put-api-key>}
+      chain_id: ${int:1}
       poa_chain: ${bool:false}
       default_gas_price_strategy: ${str:eip1559}
     gnosis:
@@ -121,7 +123,7 @@ type: skill
 models:
   benchmark_tool:
     args:
-      log_dir: ${str:/logs}
+      log_dir: ${str:/tmp}
   params:
     args:
       cleanup_history_depth: 1
@@ -190,6 +192,7 @@ models:
       termination_from_block: ${int:34088325}
       transfer_target_address: ${str:0x0000000000000000000000000000000000000000}
       olas_token_address: ${str:0xcE11e14225575945b8E6Dc0D4F2dD4C570f79d9f}
+      api_selection: coinmarketcap
   coingecko_specs:
     args:
       api_id: coingecko
@@ -204,3 +207,17 @@ models:
       response_type: dict
       retries: 5
       url: https://api.coingecko.com/api/v3/simple/price
+  coinmarketcap_specs:
+    args:
+      api_id: coinmarketcap
+      headers:
+        Accept: application/json
+      method: GET
+      parameters:
+        symbol: OLAS
+        convert: USD
+        CMC_PRO_API_KEY: ${str:null}
+      response_type: dict
+      response_key: data
+      retries: 5
+      url: https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest

@@ -24,6 +24,12 @@ from typing import Optional
 
 from packages.valory.skills.abstract_round_abci.base import BaseTxPayload
 
+@dataclass(frozen=True)
+class ApiSelectionPayload(BaseTxPayload):
+    """Represent a transaction payload for the ApiSelectionRound."""
+
+    api_selection: str
+
 
 @dataclass(frozen=True)
 class DataPullPayload(BaseTxPayload):
@@ -34,6 +40,14 @@ class DataPullPayload(BaseTxPayload):
     native_balance: Optional[float]
     erc20_balance: Optional[float]
 
+@dataclass(frozen=True)
+class AlternativeDataPullPayload(BaseTxPayload):
+    """Represent a transaction payload for the AlternativeDataPullRound."""
+
+    price: Optional[float]
+    price_ipfs_hash: Optional[str]
+    native_balance: Optional[float]
+    erc20_balance: Optional[float]
 
 @dataclass(frozen=True)
 class DecisionMakingPayload(BaseTxPayload):
@@ -44,6 +58,13 @@ class DecisionMakingPayload(BaseTxPayload):
 
 @dataclass(frozen=True)
 class TxPreparationPayload(BaseTxPayload):
+    """Represent a transaction payload for the TxPreparationRound."""
+
+    tx_submitter: Optional[str] = None
+    tx_hash: Optional[str] = None
+
+@dataclass(frozen=True)
+class AnotherTxPreparationPayload(BaseTxPayload):
     """Represent a transaction payload for the TxPreparationRound."""
 
     tx_submitter: Optional[str] = None
