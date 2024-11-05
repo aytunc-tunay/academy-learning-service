@@ -21,7 +21,7 @@ contracts:
 - valory/service_registry:0.1.0:bafybeieqgcuxmz4uxvlyb62mfsf33qy4xwa5lrij4vvcmrtcsfkng43oyq
 - valory/erc20:0.1.0:bafybeibk2y6ldylquuikk3cmtk64e2wnjbtuxy5doorzsp4ysx6uwqbdxm
 - valory/oracle:0.1.0:bafybeihnxwri2faiflv37xvfw44cqhe5zvdqrdwh4v25jj33imj53gcjsy
-- valory/simple_storage:0.1.0:bafybeiabjie564yuizzhwebmdcr55jxjfljqctyvjf4sfhoo64fmneronu
+- valory/simple_storage:0.1.0:bafybeifeqijbmbmslpd6tf3eitzyb5meelw32qzerpajhxbt3wo6hrxbyq
 protocols:
 - open_aea/signing:1.0.0:bafybeihv62fim3wl2bayavfcg3u5e5cxu3b7brtu4cn5xoxd6lqwachasi
 - valory/abci:0.1.0:bafybeiaqmp7kocbfdboksayeqhkbrynvlfzsx4uy4x6nohywnmaig4an7u
@@ -34,8 +34,8 @@ protocols:
 skills:
 - valory/abstract_abci:0.1.0:bafybeihu2bcgjk2tqjiq2zhk3uogtfszqn4osvdt7ho3fubdpdj4jgdfjm
 - valory/abstract_round_abci:0.1.0:bafybeibovsktd3uxur45nrcomq5shcn46cgxd5idmhxbmjhg32c5abyqim
-- valory/learning_abci:0.1.0:bafybeidc4a6vvrt2ht5uqnjf4hjn6chi4szru24k4jjwsn7dy5hrytgy2u
-- valory/learning_chained_abci:0.1.0:bafybeibvpccnrhhbcw2r5aik37rqg4f5fphtxkpkmikv2ku6nm3j3nrpkq
+- valory/learning_abci:0.1.0:bafybeibylubdval66umo2fmnt7224f6tdblhn3zrrwxtcyth4gq6v4llwu
+- valory/learning_chained_abci:0.1.0:bafybeibaw4kr6onr7noe5uyxxj4nfqtixfdhrvq34ath7v6mlj4hxjhpnu
 - valory/registration_abci:0.1.0:bafybeicnth5q4httefsusywx3zrrq4al47owvge72dqf2fziruicq6hqta
 - valory/reset_pause_abci:0.1.0:bafybeievjciqdvxhqxfjd4whqs27h6qbxqzrae7wwj7fpvxlvmtw3x35im
 - valory/termination_abci:0.1.0:bafybeid54buqxipiuduw7b6nnliiwsxajnltseuroad53wukfonpxca2om
@@ -87,7 +87,7 @@ type: connection
 config:
   ledger_apis:
     ethereum:
-      address: ${str:https://misty-wider-scion.quiknode.pro/d69245a2666df926ff6573683b4dd7e81f7e60bf}
+      address: ${str:https://misty-wider-scion.quiknode.pro/<put-api-key>}
       chain_id: ${int:1}
       poa_chain: ${bool:false}
       default_gas_price_strategy: ${str:eip1559}
