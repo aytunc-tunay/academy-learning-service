@@ -975,7 +975,7 @@ class AnotherTxPreparationBehaviour(
         # Call the contract's get function
         response_msg = yield from self.get_contract_api_response(
             performative=ContractApiMessage.Performative.GET_RAW_TRANSACTION,
-            contract_address="0x1713671c263D771E7a25059067B139beeCd81286",  # Replace with your SimpleStorage contract address
+            contract_address="0x606AA8a391d4fF59273C294EE9EA3278Da82504D",  # Replace with your SimpleStorage contract address
             contract_id=str(SimpleStorage.contract_id),  # Contract ID for SimpleStorage
             contract_callable="get_stored_data",
             chain_id=GNOSIS_CHAIN_ID,  # Replace with the appropriate chain ID
@@ -1020,7 +1020,7 @@ class AnotherTxPreparationBehaviour(
         # Prepare transaction data by calling `set_stored_data` on SimpleStorage
         response_msg = yield from self.get_contract_api_response(
             performative=ContractApiMessage.Performative.GET_RAW_TRANSACTION,
-            contract_address="0x1713671c263D771E7a25059067B139beeCd81286",  # SimpleStorage contract address
+            contract_address="0x606AA8a391d4fF59273C294EE9EA3278Da82504D",  # SimpleStorage contract address
             contract_id=str(SimpleStorage.contract_id),
             contract_callable="set_stored_data",
             value=value,
@@ -1039,7 +1039,7 @@ class AnotherTxPreparationBehaviour(
 
         # Return minimal transaction data
         transaction_data = {
-            "to_address": "0x1713671c263D771E7a25059067B139beeCd81286",  # SimpleStorage contract address
+            "to_address": "0x606AA8a391d4fF59273C294EE9EA3278Da82504D",  # SimpleStorage contract address
             "data": bytes.fromhex(transaction_data_hex[2:])  # Convert hex string to bytes without "0x"
         }
         self.context.logger.info(f"Prepared minimal storage set transaction data: {transaction_data}")
