@@ -357,7 +357,7 @@ type: connection
 config:
   ledger_apis:
     ethereum:
-      address: ${ETHEREUM_LEDGER_RPC:str:https://misty-wider-scion.quiknode.pro/d69245a2666df926ff6573683b4dd7e81f7e60bf}
+      address: ${ETHEREUM_LEDGER_RPC:str:https://misty-wider-scion.quiknode.pro/<put-api-key-here>}
       chain_id: ${ETHEREUM_LEDGER_CHAIN_ID:int:1}
       poa_chain: ${ETHEREUM_LEDGER_IS_POA_CHAIN:bool:false}
       default_gas_price_strategy: ${ETHEREUM_LEDGER_PRICING:str:eip1559}
