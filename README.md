@@ -1,33 +1,37 @@
-## Learning Service
+# Portfolio Rebalancer Service
 
-A service to learn about [Olas](https://olas.network/) agents and [Open Autonomy](https://github.com/valory-xyz/open-autonomy).
+A service to manage and rebalance cryptocurrency portfolios based on customizable target allocations and price data from either [CoinMarketCap](https://coinmarketcap.com/) or [CoinGecko](https://www.coingecko.com/).
 
+The Portfolio Rebalancer interacts with a mock decentralized exchange (DEX) contract and enables multisig contract-authorized rebalancing actions to adjust token holdings to maintain user-defined allocations.
 
-## System requirements
+---
 
-- Python `>=3.10`
+## System Requirements
+
+- [Python](https://www.python.org/downloads/release/python-31015/) `==3.10`
 - [Tendermint](https://docs.tendermint.com/v0.34/introduction/install.html) `==0.34.19`
 - [IPFS node](https://docs.ipfs.io/install/command-line/#official-distributions) `==0.6.0`
 - [Pip](https://pip.pypa.io/en/stable/installation/)
 - [Poetry](https://python-poetry.org/)
 - [Docker Engine](https://docs.docker.com/engine/install/)
 - [Docker Compose](https://docs.docker.com/compose/install/)
-- [Set Docker permissions so you can run containers as non-root user](https://docs.docker.com/engine/install/linux-postinstall/)
+- [Set Docker permissions for non-root access](https://docs.docker.com/engine/install/linux-postinstall/)
 
+---
 
-## Run you own agent
+## Run Your Own Portfolio Rebalancer Agent
 
-### Get the code
+### Get the Code
 
-1. Clone this repo:
+1. Clone this repository:
 
-    ```
-    git clone git@github.com:valory-xyz/academy-learning-service.git
+    ```bash
+    git clone git@github.com:aytunc-tunay/academy-learning-service.git
     ```
 
 2. Create the virtual environment:
 
-    ```
+    ```bash
     cd academy-learning-service
     poetry shell
     poetry install
@@ -35,69 +39,97 @@ A service to learn about [Olas](https://olas.network/) agents and [Open Autonomy
 
 3. Sync packages:
 
-    ```
+    ```bash
     autonomy packages sync --update-packages
     ```
 
-### Prepare the data
+---
 
-1. Prepare a keys.json file containing wallet address and the private key for each of the four agents.
+### Prepare the Data
 
-    ```
+1. Prepare a `keys.json` file containing wallet addresses and private keys for each agent:
+
+    ```bash
     autonomy generate-key ethereum -n 4
     ```
 
-2. Prepare a `ethereum_private_key.txt` file containing one of the private keys from `keys.json`. Ensure that there is no newline at the end.
+2. Prepare a `ethereum_private_key.txt` file with one of the private keys from `keys.json` (no newline at the end).
 
-3. Deploy two [Safes on Gnosis](https://app.safe.global/welcome) (it's free) and set your agent addresses as signers. Set the signature threshold to 1 out of 4 for one of them and and to 3 out of 4 for the other. This way we can use the single-signer one for testing without running all the agents, and leave the other safe for running the whole service.
+4. Create two [Safes on Gnosis](https://app.safe.global/welcome):
+    - Set the Safe threshold to **1 out of 4** for one and **3 out of 4** for the other.
+    - Use the single-signer Safe for testing, while the other is for full service operation.
+4. Deploy the mock DEX contract in `packages/valory/contracts/mock_dex/MockTradeContract.sol` on Gnosis
+    - Don't forget to replace this two safe address with the ones in contract for transaction authorization.
 
-4. Create a [Tenderly](https://tenderly.co/) account and from your dashboard create a fork of Gnosis chain (virtual testnet).
 
-5. From Tenderly, fund your agents and Safe with some xDAI and OLAS (`0xcE11e14225575945b8E6Dc0D4F2dD4C570f79d9f`).
+4. Fund the Safe and agents with test assets (xDAI and tokens) using [Tenderly](https://tenderly.co/) or a similar virtual testnet.
 
-6. Make a copy of the env file:
+5. Add initial deposits to the mock DEX contract. 
 
-    ```
+6. Make a copy of the sample environment file and edit the variables:
+
+    ```bash
     cp sample.env .env
     ```
 
-7. Fill in the required environment variables in .env. These variables are:
-- `ALL_PARTICIPANTS`: a list of your agent addresses. This will vary depending on whether you are running a single agent (`run_agent.sh` script) or the whole 4-agent service (`run_service.sh`)
-- `GNOSIS_LEDGER_RPC`: set it to your Tenderly fork Admin RPC.
-- `COINGECKO_API_KEY`: you will need to get a free [Coingecko](https://www.coingecko.com/) API key.
-- `TRANSFER_TARGET_ADDRESS`: any random address to send funds to, can be any of the agents for example.
-- `SAFE_CONTRACT_ADDRESS_SINGLE`: the 1 out of 4 agents Safe address.
-- `SAFE_CONTRACT_ADDRESS`: the 3 out of 4 Safe address.
+---
 
+### Environment Variables
 
-### Run a single agent locally
+Add the following environment variables in `.env` to configure the rebalancer:
 
-1. Verify that `ALL_PARTICIPANTS` in `.env` contains only 1 address.
+- **API and Key Settings**:
+  - `COINGECKO_API_KEY`: API key for CoinGecko
+  - `COINMARKETCAP_API_KEY`: API key for CoinMarketCap
+  - `API_SELECTION`: Either `coingecko` or `coinmarketcap` to set the price source
+- **Mock DEX and Safe Contract Addresses**:
+  - `MOCK_CONTRACT_ADDRESS`: Address of the deployed mock DEX contract
+  - `PORTFOLIO_ADDRESS`: Address of the portfolio (the agent holding the assets)
+  - `SAFE_CONTRACT_ADDRESS_SINGLE`: Address of the single-signer Safe
+  - `SAFE_CONTRACT_ADDRESS`: Address of the multi-signer Safe
+- **Rebalancing Settings**:
+  - `TOKENS_TO_REBALANCE`: List of tokens to track, e.g., `["ETH", "USDC"]`
+  - `TARGET_PERCENTAGES`: Desired allocations for each token, e.g., `[75.0, 25.0]`
+  - `VARIATION_THRESHOLD`: Maximum allowed deviation from target before rebalancing, e.g., `3.0`
 
-2. Run the agent:
+---
 
-    ```
+### Run a Single Agent Locally
+
+1. Verify that `ALL_PARTICIPANTS` in `.env` includes only one address.
+
+2. Start the agent:
+
+    ```bash
     bash run_agent.sh
     ```
 
-### Run the service (4 agents) via Docker Compose deployment
+---
 
-1. Verify that `ALL_PARTICIPANTS` in `.env` contains 4 address.
+### Run the Full Rebalancing Service (4 agents) via Docker Compose
 
-2. Check that Docker is running:
+1. Ensure `ALL_PARTICIPANTS` in `.env` includes four addresses.
 
-    ```
+2. Start Docker:
+
+    ```bash
     docker
     ```
 
-3. Run the service:
+3. Start the service:
 
-    ```
+    ```bash
     bash run_service.sh
     ```
 
-4. Look at the service logs for one of the agents (on another terminal):
+4. Check service logs for an agent (in a new terminal):
 
-    ```
+    ```bash
     docker logs -f learningservice_abci_0
     ```
+
+---
+
+### Overview of Functionality
+
+The Portfolio Rebalancer monitors portfolio allocations based on USD values, aiming to keep token balances aligned with target allocations. When token values exceed the threshold, rebalancing occurs by adjusting token amounts and updating balances via multisend transactions to the mock DEX contract. Reports are also stored in IPFS for transparency and auditability.

@@ -7,19 +7,19 @@ license: Apache-2.0
 aea_version: '>=1.0.0, <2.0.0'
 fingerprint:
   __init__.py: bafybeiho3lkochqpmes4f235chq26oggmwnol3vjuvhosleoubbjirbwaq
-  behaviours.py: bafybeihl2yieqiqlnl5hajvmmohixgj5evyvkpmvhuopfpm6hgzoyplh2y
+  behaviours.py: bafybeiewyv7p3fsbzionkz5x6dmkqcwotmaroyvymfnaaoqf3x4szumaqm
   dialogues.py: bafybeifqjbumctlffx2xvpga2kcenezhe47qhksvgmaylyp5ypwqgfar5u
   fsm_specification.yaml: bafybeigbbydxuqephdpatb3fp3sxnvr77bfvvo5hwjimxfpgyl32wupe64
   handlers.py: bafybeigjadr4thz6hfpfx5abezbwnqhbxmachf4efasrn4z2vqhsqgnyvi
-  models.py: bafybeifx6hlit5mcc35i6qbjazwdkewpr5e2hu3icoef5etmt7o3uaed2i
-  payloads.py: bafybeiemzg47slxktqzp334menptrzrljxbdy37lme37fha6aos7jxscwe
-  rounds.py: bafybeihi7un2mxjhejtkgpytryzragpmo2jm26zjsihud5sxymf6dtv4be
+  models.py: bafybeihvscxfgiksdfn75zexuulztpb7vt5acbyaunaonsmupq4xx2hnoi
+  payloads.py: bafybeielg5upsxvrwmidwo7tgdixtlqizikez7czrjkkzt6wnsx6wcvjpy
+  rounds.py: bafybeibjgiu42ff2ter34yl6actfqlyd4afulaazydvesrsrfuu637ilmq
 fingerprint_ignore_patterns: []
 connections: []
 contracts:
 - valory/gnosis_safe:0.1.0:bafybeiho6sbfts3zk3mftrngw37d5qnlvkqtnttt3fzexmcwkeevhu4wwi
 - valory/erc20:0.1.0:bafybeibk2y6ldylquuikk3cmtk64e2wnjbtuxy5doorzsp4ysx6uwqbdxm
-- valory/mock_dex:0.1.0:bafybeiccnmwhrqvb43bmt765rszkil6qplkpqk555zgc2hle3h7qdwpyc4
+- valory/mock_dex:0.1.0:bafybeiachr37lhkbtgl32mnr76gmnsh5jzx7x2mavnkobs53blkxpwi3cu
 - valory/multisend:0.1.0:bafybeig5byt5urg2d2bsecufxe5ql7f4mezg3mekfleeh32nmuusx66p4y
 protocols:
 - valory/contract_api:1.0.0:bafybeidgu7o5llh26xp3u3ebq3yluull5lupiyeu6iooi2xyymdrgnzq5i
@@ -132,8 +132,9 @@ models:
       transfer_target_address: '0x0000000000000000000000000000000000000000'
       olas_token_address: '0xcE11e14225575945b8E6Dc0D4F2dD4C570f79d9f'
       multisend_address: '0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761'
-      portfolio_address: ''
-      api_selection: ''
+      portfolio_address: null
+      api_selection: null
+      mock_contract_address: null
       tokens_to_rebalance: null
       target_percentages: null
       variation_threshold: null
@@ -145,10 +146,10 @@ models:
         Accept: application/json
       method: GET
       parameters:
-        ids: autonolas
+        ids: null
         vs_currencies: usd
         x_cg_demo_api_key: null
-      response_key: autonolas
+      response_key: null
       response_type: dict
       retries: 5
       url: https://api.coingecko.com/api/v3/simple/price
@@ -160,7 +161,7 @@ models:
         Accept: application/json
       method: GET
       parameters:
-        symbol: ETH
+        symbol: null
         convert: USD
         CMC_PRO_API_KEY: null
       response_type: dict

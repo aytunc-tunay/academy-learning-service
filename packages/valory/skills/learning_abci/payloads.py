@@ -50,18 +50,10 @@ class DecisionMakingPayload(BaseTxPayload):
     """Represent a transaction payload for the DecisionMakingRound."""
 
     event: str
-    adjustment_balances: Optional[str]
-
+    adjustment_balances: Optional[str] # Store as JSON string for hashability
 
 @dataclass(frozen=True)
 class TxPreparationPayload(BaseTxPayload):
-    """Represent a transaction payload for the TxPreparationRound."""
-
-    tx_submitter: Optional[str] = None
-    tx_hash: Optional[str] = None
-
-@dataclass(frozen=True)
-class AnotherTxPreparationPayload(BaseTxPayload):
     """Represent a transaction payload for the TxPreparationRound."""
 
     tx_submitter: Optional[str] = None

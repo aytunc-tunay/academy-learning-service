@@ -68,6 +68,10 @@ class Params(BaseParams):
         self.target_percentages: List[float] = self._ensure("target_percentages", kwargs, list)
         self.variation_threshold: float = self._ensure("variation_threshold", kwargs, float)
         self.portfolio_address_string: str = self._ensure("portfolio_address", kwargs, str)
+        self.mock_contract_address_string: str = self._ensure("mock_contract_address", kwargs, str)
+
+        
+        #Neeed for from field while interacting with protected contract of MockTrade.
         self.safe_address: str = kwargs.get("setup", {}).get("safe_contract_address", "")
 
 

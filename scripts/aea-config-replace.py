@@ -26,6 +26,7 @@ from pathlib import Path
 import yaml
 from dotenv import load_dotenv
 
+import json
 
 def main() -> None:
     """Main"""
@@ -72,6 +73,35 @@ def main() -> None:
                 "transfer_target_address"
             ] = f"${{str:{os.getenv('TRANSFER_TARGET_ADDRESS')}}}"  # type: ignore
 
+            # MOCK_CONTRACT_ADDRESS
+            config[-1]["models"]["params"]["args"][
+                "mock_contract_address"
+            ] = f"${{str:{os.getenv('MOCK_CONTRACT_ADDRESS')}}}"  # type: ignore
+
+            # PORTFOLIO_ADDRESS
+            config[-1]["models"]["params"]["args"][
+                "portfolio_address"
+            ] = f"${{str:{os.getenv('PORTFOLIO_ADDRESS')}}}"  # type: ignore
+
+            # API_SELECTION
+            config[-1]["models"]["params"]["args"][
+                "api_selection"
+            ] = f"${{str:{os.getenv('API_SELECTION')}}}"  # type: ignore
+
+            # TOKENS_TO_REBALANCE
+            config[-1]["models"]["params"]["args"]["tokens_to_rebalance"] = [
+                f"${{str:{token}}}" for token in json.loads(os.getenv("TOKENS_TO_REBALANCE"))
+                ]   # type: ignore
+            
+            #TARGET_PERCENTAGES
+            config[-1]["models"]["params"]["args"]["target_percentages"] = [
+                f"${{float:{float(percent)}}}" for percent in json.loads(os.getenv("TARGET_PERCENTAGES"))
+            ]  # type: ignore
+
+            # VARIATION_THRESHOLD
+            config[-1]["models"]["params"]["args"][
+                "variation_threshold"
+            ] = f"${{float:{os.getenv('VARIATION_THRESHOLD', '3.0')}}}"  # type: ignore
     with open(Path("learning_agent", "aea-config.yaml"), "w", encoding="utf-8") as file:
         yaml.dump_all(config, file, sort_keys=False)
 

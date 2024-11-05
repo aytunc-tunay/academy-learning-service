@@ -23,7 +23,7 @@ import json
 from abc import ABC
 from pathlib import Path
 from tempfile import mkdtemp
-from typing import Tuple, Dict, Generator, Optional, Set, Type, cast
+from typing import Union, Tuple, Dict, Generator, Optional, Set, Type, cast
 from datetime import datetime
 
 from packages.valory.contracts.erc20.contract import ERC20
@@ -57,8 +57,7 @@ from packages.valory.skills.learning_abci.payloads import (
     AlternativeDataPullPayload,
     DataPullPayload,
     DecisionMakingPayload,
-    # TxPreparationPayload,
-    AnotherTxPreparationPayload,
+    TxPreparationPayload,
 )
 from packages.valory.skills.learning_abci.rounds import (
     ApiSelectionRound,
@@ -68,8 +67,7 @@ from packages.valory.skills.learning_abci.rounds import (
     Event,
     LearningAbciApp,
     SynchronizedData,
-    # TxPreparationRound,
-    AnotherTxPreparationRound,
+    TxPreparationRound,
 )
 from packages.valory.skills.transaction_settlement_abci.payload_tools import (
     hash_payload_to_hex,
@@ -133,7 +131,11 @@ class LearningBaseBehaviour(BaseBehaviour, ABC):  # pylint: disable=too-many-anc
 class ApiSelectionBehaviour(
     LearningBaseBehaviour
 ):  # pylint: disable=too-many-ancestors
-    """ApiSelectionBehaviour"""
+    """ApiSelectionBehaviour
+    A behavior for selecting an API source, determining whether to use "coingecko" or "coinmarketcap" based on parameters, and submitting the decision.
+
+    Sets api_selection to "coingecko" by default, or "coinmarketcap" if specified in parameters.
+    """
 
     matching_round: Type[AbstractRound] = ApiSelectionRound
 
@@ -156,7 +158,7 @@ class ApiSelectionBehaviour(
         self.set_done()
 
 class DataPullBehaviour(LearningBaseBehaviour):  # pylint: disable=too-many-ancestors
-    """This behaviours pulls token prices from API endpoints and reads the native balance of an account"""
+    """This behaviours pulls token prices from API endpoints """
 
     matching_round: Type[AbstractRound] = DataPullRound
 
@@ -170,13 +172,12 @@ class DataPullBehaviour(LearningBaseBehaviour):  # pylint: disable=too-many-ance
             self.context.logger.info(f"Token values: {token_values}")
             self.context.logger.info(f"Total portfolio value: {total_portfolio_value}")
 
-            # Step 3: Convert token values to JSON if available
+            # Convert token values to JSON, dict is not hashable causing problems
             token_values_json = json.dumps(token_values, sort_keys=True) if token_values else None
             self.context.logger.info(f"Token values JSON: {token_values_json}")
 
 
             # Prepare the payload to be shared with other agents
-            # After consensus, all the agents will have the same price, price_ipfs_hash and balance variables in their synchronized data
             payload = DataPullPayload(
                 sender=sender,
                 token_values=token_values_json,
@@ -214,8 +215,7 @@ class DataPullBehaviour(LearningBaseBehaviour):  # pylint: disable=too-many-ance
         
         self.context.logger.info(f"Got token price from Coingecko: {price}")
         return price
-
-    
+ 
     def get_token_balances(self) -> Generator[None, None, Optional[Dict[str, float]]]:
         """
         Get balances for each specified token from the deployed contract using parameters from self.params.
@@ -226,6 +226,8 @@ class DataPullBehaviour(LearningBaseBehaviour):  # pylint: disable=too-many-ance
 
         # Retrieve portfolio address and tokens to rebalance from params
         portfolio_address = self.params.portfolio_address_string
+        mock_contract_address = self.params.mock_contract_address_string
+
         tokens_to_rebalance = self.params.tokens_to_rebalance
 
         # Log the portfolio details and tokens
@@ -239,7 +241,7 @@ class DataPullBehaviour(LearningBaseBehaviour):  # pylint: disable=too-many-ance
             # Call the contract API to get the token balance for the portfolio
             response_msg = yield from self.get_contract_api_response(
                 performative=ContractApiMessage.Performative.GET_RAW_TRANSACTION,  # type: ignore
-                contract_address="0xbB7f0e7cfF9aAC4b3F6bA55321DB5060c0685b34",  # Portfolio contract address
+                contract_address=mock_contract_address,  # Portfolio contract address
                 contract_id=str(MOCKDEX.contract_id),  # Contract ID for the deployed contract
                 contract_callable="getBalance",
                 user=portfolio_address, 
@@ -279,77 +281,6 @@ class DataPullBehaviour(LearningBaseBehaviour):  # pylint: disable=too-many-ance
                 self.context.logger.info(f"Balance for {token} could not be retrieved.")
 
         return balances if balances else None
-
-        def get_latest_price(self) -> Generator[None, None, Optional[float]]:
-            """Get latest price from Oracle contract."""
-            self.context.logger.info("Fetching the latest price from the Oracle contract.")
-
-            # Use the contract API to interact with the Oracle contract
-            response_msg = yield from self.get_contract_api_response(
-                performative=ContractApiMessage.Performative.GET_RAW_TRANSACTION,  # type: ignore
-                contract_address="0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419",  # Address of the deployed Oracle contract
-                contract_id=str(ORACLE.contract_id),  # Contract ID for the Oracle contract
-                contract_callable="get_latest_answer",
-                chain_id=ETHEREUM_CHAIN_ID,  # Replace with the appropriate chain ID
-            )
-
-            # Check that the response is what we expect
-            if response_msg.performative != ContractApiMessage.Performative.RAW_TRANSACTION:
-                self.context.logger.error(f"Error while retrieving the latest price: {response_msg}")
-                return None
-
-            latest_price = response_msg.raw_transaction.body.get("answer", None)
-
-            # Ensure that the latest price is not None
-            if latest_price is None:
-                self.context.logger.error(f"Error while retrieving the latest price: {response_msg}")
-                return None
-
-            # Convert the price to a readable format (e.g., divide by 10**8 if using 8 decimals)
-            latest_price = latest_price / 10**8  # Adjust as per the oracle’s price format
-
-            self.context.logger.info(f"The latest price ORACLE CONTRACT is {latest_price}")
-            return latest_price
-
-    def generate_and_store_report(self, token_values: Dict[str, float], total_portfolio_value: float) -> Generator[None, None, Optional[str]]:
-        """
-        Generate the rebalancing report, store it in IPFS, and return the IPFS hash.
-
-        :param token_values: Dictionary with tokens and their USD values.
-        :param total_portfolio_value: Total value of the portfolio in USD.
-        :return: IPFS hash of the stored report or None if storage fails.
-        """
-        from datetime import datetime
-
-        # Generate the report JSON
-        report = {
-            "timestamp": datetime.utcnow().isoformat(),
-            "variation_threshold": self.params.variation_threshold,
-            "total_portfolio_value": total_portfolio_value,
-            "tokens": []
-        }
-
-        for token, usd_value in token_values.items():
-            target_percentage = self.params.target_percentages[self.params.tokens_to_rebalance.index(token)]
-            current_percentage = (usd_value / total_portfolio_value) * 100
-            token_price = yield from self.get_token_price_specs(token)
-            current_token_amount = usd_value / token_price if token_price else 0
-
-            report["tokens"].append({
-                "token": token,
-                "current_number_of_tokens": current_token_amount,
-                "current_usd_value": usd_value,
-                "current_percentage_in_portfolio": current_percentage,
-                "target_percentage": target_percentage,
-                "usd_deviation_from_target": current_percentage - target_percentage
-            })
-
-        # Store the report in IPFS
-        report_ipfs_hash = yield from self.send_to_ipfs(
-            filename="PortfolioRebalancer_Report.json", obj=report, filetype=SupportedFiletype.JSON
-        )
-
-        return report_ipfs_hash
 
     def calculate_portfolio_allocation(self) -> Generator[None, None, Optional[Tuple[Dict[str, float], float]]]:
         """
@@ -403,12 +334,12 @@ class DataPullBehaviour(LearningBaseBehaviour):  # pylint: disable=too-many-ance
 
         self.context.logger.info(f"Total Portfolio Value: {total_portfolio_value:.2f} USD")
 
-        # Step 5: Generate and store the rebalancing report in IPFS
-        report_ipfs_hash = yield from self.generate_and_store_report(token_values, total_portfolio_value)
-        if report_ipfs_hash:
-            self.context.logger.info(f"Rebalancing report stored in IPFS: https://gateway.autonolas.tech/ipfs/{report_ipfs_hash}")
-        else:
-            self.context.logger.error("Failed to store rebalancing report in IPFS.")
+        # # Step 5: Generate and store the rebalancing report in IPFS
+        # report_ipfs_hash = yield from self.generate_and_store_report(token_values, total_portfolio_value)
+        # if report_ipfs_hash:
+        #     self.context.logger.info(f"Rebalancing report stored in IPFS: https://gateway.autonolas.tech/ipfs/{report_ipfs_hash}")
+        # else:
+        #     self.context.logger.error("Failed to store rebalancing report in IPFS.")
 
 
         # Return token values and total portfolio value
@@ -430,13 +361,12 @@ class AlternativeDataPullBehaviour(LearningBaseBehaviour):  # pylint: disable=to
             self.context.logger.info(f"Token values: {token_values}")
             self.context.logger.info(f"Total portfolio value: {total_portfolio_value}")
 
-            # Step 3: Convert token values to JSON if available
+            # Convert token values to JSON, dict is not hashable causing problems
             token_values_json = json.dumps(token_values, sort_keys=True) if token_values else None
             self.context.logger.info(f"Token values JSON: {token_values_json}")
 
 
             # Prepare the payload to be shared with other agents
-            # After consensus, all the agents will have the same price, price_ipfs_hash and balance variables in their synchronized data
             payload = AlternativeDataPullPayload(
                 sender=sender,
                 token_values=token_values_json,
@@ -451,7 +381,7 @@ class AlternativeDataPullBehaviour(LearningBaseBehaviour):  # pylint: disable=to
         self.set_done()
 
     def get_token_price_specs(self, symbol) -> Generator[None, None, Optional[float]]:
-        """Get token price from Coingecko using ApiSpecs"""
+        """Get token price from Coinmarketcap using ApiSpecs"""
 
         # Get the specs
         specs = self.coinmarketcap_specs.get_spec()
@@ -483,6 +413,8 @@ class AlternativeDataPullBehaviour(LearningBaseBehaviour):  # pylint: disable=to
 
         # Retrieve portfolio address and tokens to rebalance from params
         portfolio_address = self.params.portfolio_address_string
+        mock_contract_address = self.params.mock_contract_address_string
+
         tokens_to_rebalance = self.params.tokens_to_rebalance
 
         # Log the portfolio details and tokens
@@ -496,7 +428,7 @@ class AlternativeDataPullBehaviour(LearningBaseBehaviour):  # pylint: disable=to
             # Call the contract API to get the token balance for the portfolio
             response_msg = yield from self.get_contract_api_response(
                 performative=ContractApiMessage.Performative.GET_RAW_TRANSACTION,  # type: ignore
-                contract_address="0xbB7f0e7cfF9aAC4b3F6bA55321DB5060c0685b34",  # Portfolio contract address
+                contract_address=mock_contract_address,  # Portfolio contract address
                 contract_id=str(MOCKDEX.contract_id),  # Contract ID for the deployed contract
                 contract_callable="getBalance",
                 user=portfolio_address, 
@@ -536,77 +468,6 @@ class AlternativeDataPullBehaviour(LearningBaseBehaviour):  # pylint: disable=to
                 self.context.logger.info(f"Balance for {token} could not be retrieved.")
 
         return balances if balances else None
-
-        def get_latest_price(self) -> Generator[None, None, Optional[float]]:
-            """Get latest price from Oracle contract."""
-            self.context.logger.info("Fetching the latest price from the Oracle contract.")
-
-            # Use the contract API to interact with the Oracle contract
-            response_msg = yield from self.get_contract_api_response(
-                performative=ContractApiMessage.Performative.GET_RAW_TRANSACTION,  # type: ignore
-                contract_address="0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419",  # Address of the deployed Oracle contract
-                contract_id=str(ORACLE.contract_id),  # Contract ID for the Oracle contract
-                contract_callable="get_latest_answer",
-                chain_id=ETHEREUM_CHAIN_ID,  # Replace with the appropriate chain ID
-            )
-
-            # Check that the response is what we expect
-            if response_msg.performative != ContractApiMessage.Performative.RAW_TRANSACTION:
-                self.context.logger.error(f"Error while retrieving the latest price: {response_msg}")
-                return None
-
-            latest_price = response_msg.raw_transaction.body.get("answer", None)
-
-            # Ensure that the latest price is not None
-            if latest_price is None:
-                self.context.logger.error(f"Error while retrieving the latest price: {response_msg}")
-                return None
-
-            # Convert the price to a readable format (e.g., divide by 10**8 if using 8 decimals)
-            latest_price = latest_price / 10**8  # Adjust as per the oracle’s price format
-
-            self.context.logger.info(f"The latest price ORACLE CONTRACT is {latest_price}")
-            return latest_price
-
-    def generate_and_store_report(self, token_values: Dict[str, float], total_portfolio_value: float) -> Generator[None, None, Optional[str]]:
-        """
-        Generate the rebalancing report, store it in IPFS, and return the IPFS hash.
-
-        :param token_values: Dictionary with tokens and their USD values.
-        :param total_portfolio_value: Total value of the portfolio in USD.
-        :return: IPFS hash of the stored report or None if storage fails.
-        """
-        from datetime import datetime
-
-        # Generate the report JSON
-        report = {
-            "timestamp": datetime.utcnow().isoformat(),
-            "variation_threshold": self.params.variation_threshold,
-            "total_portfolio_value": total_portfolio_value,
-            "tokens": []
-        }
-
-        for token, usd_value in token_values.items():
-            target_percentage = self.params.target_percentages[self.params.tokens_to_rebalance.index(token)]
-            current_percentage = (usd_value / total_portfolio_value) * 100
-            token_price = yield from self.get_token_price_specs(token)
-            current_token_amount = usd_value / token_price if token_price else 0
-
-            report["tokens"].append({
-                "token": token,
-                "current_number_of_tokens": current_token_amount,
-                "current_usd_value": usd_value,
-                "current_percentage_in_portfolio": current_percentage,
-                "target_percentage": target_percentage,
-                "usd_deviation_from_target": current_percentage - target_percentage
-            })
-
-        # Store the report in IPFS
-        report_ipfs_hash = yield from self.send_to_ipfs(
-            filename="PortfolioRebalancer_Report.json", obj=report, filetype=SupportedFiletype.JSON
-        )
-
-        return report_ipfs_hash
 
     def calculate_portfolio_allocation(self) -> Generator[None, None, Optional[Tuple[Dict[str, float], float]]]:
         """
@@ -660,17 +521,18 @@ class AlternativeDataPullBehaviour(LearningBaseBehaviour):  # pylint: disable=to
 
         self.context.logger.info(f"Total Portfolio Value: {total_portfolio_value:.2f} USD")
 
-        # Step 5: Generate and store the rebalancing report in IPFS
-        report_ipfs_hash = yield from self.generate_and_store_report(token_values, total_portfolio_value)
-        if report_ipfs_hash:
-            self.context.logger.info(f"Rebalancing report stored in IPFS: https://gateway.autonolas.tech/ipfs/{report_ipfs_hash}")
-        else:
-            self.context.logger.error("Failed to store rebalancing report in IPFS.")
+        # # Step 5: Generate and store the rebalancing report in IPFS
+        # report_ipfs_hash = yield from self.generate_and_store_report(token_values, total_portfolio_value)
+        # if report_ipfs_hash:
+        #     self.context.logger.info(f"Rebalancing report stored in IPFS: https://gateway.autonolas.tech/ipfs/{report_ipfs_hash}")
+        # else:
+        #     self.context.logger.error("Failed to store rebalancing report in IPFS.")
 
 
         # Return token values and total portfolio value
         return token_values, total_portfolio_value
         
+
 class DecisionMakingBehaviour(
     LearningBaseBehaviour
 ):  # pylint: disable=too-many-ancestors
@@ -687,8 +549,6 @@ class DecisionMakingBehaviour(
             # Make a decision: either transact or not
             event,adjustment_balances = yield from self.get_next_event()
 
-            self.context.logger.info(f"JSON VALUES FROM EVENT: {adjustment_balances}")            
-
             payload = DecisionMakingPayload(sender=sender, event=event, adjustment_balances=adjustment_balances)
 
         with self.context.benchmark_tool.measure(self.behaviour_id).consensus():
@@ -700,13 +560,21 @@ class DecisionMakingBehaviour(
     def get_next_event(self) -> Generator[None, None, Optional[Tuple[str,Dict[str, float]] ]]:
         """Get the next event: decide whether ot transact or not based on some data."""
 
-        rebalancing_actions = yield from self.calculate_rebalancing_actions()
+        threshold_exceed, rebalancing_actions, token_values, total_portfolio_value = yield from self.calculate_rebalancing_actions()
 
-        if rebalancing_actions is None:
+        if not threshold_exceed:
             self.context.logger.info("No need for adjustment!")
             return Event.DONE.value, None
         else:
             self.context.logger.info("There should be some adjustment in the portfolio!")
+            
+            # Generate and store the rebalancing report in IPFS
+            report_ipfs_hash = yield from self.generate_and_store_report(token_values, total_portfolio_value)
+            if report_ipfs_hash:
+                self.context.logger.info(f"Rebalancing report stored in IPFS: https://gateway.autonolas.tech/ipfs/{report_ipfs_hash}")
+            else:
+                self.context.logger.error("Failed to store rebalancing report in IPFS.")
+
             rebalancing_actions_json = json.dumps(rebalancing_actions, sort_keys=True) if rebalancing_actions else None
             return Event.TRANSACT.value, rebalancing_actions_json
 
@@ -735,8 +603,8 @@ class DecisionMakingBehaviour(
 
         return block_number
     
-    def calculate_rebalancing_actions(self) -> Generator[None, None, Optional[Dict[str, float]]]:
-        """
+    def calculate_rebalancing_actions(self) -> Generator[None, None, Union[bool,Dict[str, float],Dict[str, float],float]]:
+        """, Optional[
         Calculate rebalancing actions based on current and target percentages.
 
         :return: Dictionary with tokens as keys and new target token amounts as values.
@@ -779,6 +647,7 @@ class DecisionMakingBehaviour(
 
         # Initialize dictionary to store the new target token amounts for each token
         new_token_amounts = {}
+        isRebalanceNeeded = False
 
         # Step 1: Calculate current and target values for each token
         for i, token in enumerate(tokens_to_rebalance):
@@ -809,8 +678,8 @@ class DecisionMakingBehaviour(
                 f"current % of portfolio = {current_percentage:.2f}%, target value in USD = {target_value:.2f}"
             )
 
-            # Calculate deviation based on the difference between current and target value in USD
-            deviation = (current_value - target_value) / target_value * 100
+            # Calculate deviation based on the difference between current and target percentage
+            deviation = current_percentage - target_percentage
 
             # Check if deviation exceeds threshold and store new target token amount if needed
             if abs(deviation) > variation_threshold:
@@ -822,15 +691,16 @@ class DecisionMakingBehaviour(
                     f"{token}: To rebalance, {action} to reach target of {target_token_amount:.4f} tokens "
                     f"(deviation: {deviation:.2f}% in USD balance)"
                 )
+                isRebalanceNeeded = True
+                self.context.logger.info(f"Completed rebalancing calculation. New target token amounts: {new_token_amounts}")
             else:
                 self.context.logger.info(
-                    f"{token} is within the threshold ({variation_threshold}% deviation in USD balance) and requires no rebalancing."
+                    f"{token} is within the threshold ({variation_threshold}% deviation in percentage) and requires no rebalancing."
                 )
 
-        # Final rebalancing action summary log
-        self.context.logger.info(f"Completed rebalancing calculation. New target token amounts: {new_token_amounts}")
+        
 
-        return new_token_amounts
+        return isRebalanceNeeded, new_token_amounts, token_values, total_portfolio_value
 
     def get_token_price_specs(self, symbol) -> Generator[None, None, Optional[float]]:
                 """Get token price from Coingecko using ApiSpecs"""
@@ -858,14 +728,54 @@ class DecisionMakingBehaviour(
                 # self.context.logger.info(f"Got token price from Coingecko: {price}")
                 return price
 
+    def generate_and_store_report(self, token_values: Dict[str, float], total_portfolio_value: float) -> Generator[None, None, Optional[str]]:
+        """
+        Generate the rebalancing report, store it in IPFS, and return the IPFS hash.
+
+        :param token_values: Dictionary with tokens and their USD values.
+        :param total_portfolio_value: Total value of the portfolio in USD.
+        :return: IPFS hash of the stored report or None if storage fails.
+        """
+        from datetime import datetime
+
+        # Generate the report JSON
+        report = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "variation_threshold": self.params.variation_threshold,
+            "total_portfolio_value": total_portfolio_value,
+            "tokens": []
+        }
+
+        for token, usd_value in token_values.items():
+            target_percentage = self.params.target_percentages[self.params.tokens_to_rebalance.index(token)]
+            current_percentage = (usd_value / total_portfolio_value) * 100
+            token_price = yield from self.get_token_price_specs(token)
+            current_token_amount = usd_value / token_price if token_price else 0
+
+            report["tokens"].append({
+                "token": token,
+                "current_number_of_tokens": current_token_amount,
+                "current_usd_value": usd_value,
+                "current_percentage_in_portfolio": current_percentage,
+                "target_percentage": target_percentage,
+                "usd_deviation_from_target": current_percentage - target_percentage
+            })
+
+        # Store the report in IPFS
+        report_ipfs_hash = yield from self.send_to_ipfs(
+            filename="PortfolioRebalancer_Report.json", obj=report, filetype=SupportedFiletype.JSON
+        )
+
+        return report_ipfs_hash
 
 
-class AnotherTxPreparationBehaviour(
+
+class TxPreparationBehaviour(
     LearningBaseBehaviour
 ):  # pylint: disable=too-many-ancestors
-    """AnotherTxPreparationBehaviour"""
+    """TxPreparationBehaviour"""
 
-    matching_round: Type[AbstractRound] = AnotherTxPreparationRound
+    matching_round: Type[AbstractRound] = TxPreparationRound
 
     def async_act(self) -> Generator:
         """Do the act, supporting asynchronous execution."""
@@ -874,13 +784,13 @@ class AnotherTxPreparationBehaviour(
             sender = self.context.agent_address
 
             adjustment_balances_json = self.synchronized_data.adjustment_balances
-            self.context.logger.info(f"Token values JSON retrieved: {adjustment_balances_json}")            
+            # self.context.logger.info(f"Token values JSON retrieved: {adjustment_balances_json}")            
 
 
             # Get the transaction hash
             tx_hash = yield from self.generate_multisend_transactions(adjustment_balances_json)
 
-            payload = AnotherTxPreparationPayload(
+            payload = TxPreparationPayload(
                 sender=sender, tx_submitter=self.auto_behaviour_id(), tx_hash=tx_hash
             )
 
@@ -901,11 +811,20 @@ class AnotherTxPreparationBehaviour(
         """
         # Get the multisig address from parameters
         safe_address = self.params.safe_address
+        mock_contract_address = self.params.mock_contract_address_string
+
+        # Log the values of the important parameters
+        self.context.logger.info(f"Using safe address: {safe_address}")
+        self.context.logger.info(f"Mock contract address (MOCKDEX): {mock_contract_address}")
+        self.context.logger.info(f"User address: {user}")
+        self.context.logger.info(f"Token: {token}")
+        self.context.logger.info(f"New balance: {new_balance}")
+        self.context.logger.info(f"Chain ID: {GNOSIS_CHAIN_ID}")
 
         # Prepare transaction data by calling `adjustBalance` on MOCKDEX contract
         response_msg = yield from self.get_contract_api_response(
             performative=ContractApiMessage.Performative.GET_RAW_TRANSACTION,
-            contract_address="0xbB7f0e7cfF9aAC4b3F6bA55321DB5060c0685b34",  # MOCKDEX contract address
+            contract_address=mock_contract_address,  # MOCKDEX contract address
             contract_id=str(MOCKDEX.contract_id),
             contract_callable="adjustBalance",
             user=user,
@@ -926,9 +845,11 @@ class AnotherTxPreparationBehaviour(
             self.context.logger.error("Transaction data is missing from response.")
             return {}
 
+        mock_contract_address = self.params.mock_contract_address_string
+
         # Return minimal transaction data
         transaction_data = {
-            "to_address": "0xbB7f0e7cfF9aAC4b3F6bA55321DB5060c0685b34",  # MOCKDEX contract address
+            "to_address": mock_contract_address,  # MOCKDEX contract address
             "data": bytes.fromhex(transaction_data_hex[2:])  # Convert hex string to bytes without "0x"
         }
         self.context.logger.info(f"Prepared minimal adjust balance transaction data: {transaction_data}")
@@ -941,13 +862,14 @@ class AnotherTxPreparationBehaviour(
         # Parse the adjustment balances JSON to get the target balances for each token
         multi_send_txs = []
         adjustment_balances = json.loads(adjustment_balances_json)
+        portfolio_address = self.params.portfolio_address_string
 
         for token, target_balance in adjustment_balances.items():
             self.context.logger.info(f"Preparing multisend transaction for {token} with target balance {target_balance}")
 
             # Step 1: Prepare the balance adjustment transaction data
             balance_adjustment_data = yield from self.get_adjust_balance_data(
-                user="0xFA1FC163deeaE7Bded993Cf9aFd4A4B9ae6b3639",
+                user=portfolio_address,
                 token=token,
                 new_balance=round(target_balance)
             )
@@ -1070,8 +992,7 @@ class LearningRoundBehaviour(AbstractRoundBehaviour):
         DataPullBehaviour,
         AlternativeDataPullBehaviour,
         DecisionMakingBehaviour,
-        # TxPreparationBehaviour,
-        AnotherTxPreparationBehaviour,
+        TxPreparationBehaviour,
 
     ]
 

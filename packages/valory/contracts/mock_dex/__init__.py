@@ -17,4 +17,4 @@
 #
 # ------------------------------------------------------------------------------
 
-"""This module contains the support resources for an Oracle ETH/USD"""
+"""This module contains the support resources for MockTradeContract.sol"""

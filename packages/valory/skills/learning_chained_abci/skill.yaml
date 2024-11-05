@@ -22,7 +22,7 @@ skills:
 - valory/registration_abci:0.1.0:bafybeicnth5q4httefsusywx3zrrq4al47owvge72dqf2fziruicq6hqta
 - valory/reset_pause_abci:0.1.0:bafybeievjciqdvxhqxfjd4whqs27h6qbxqzrae7wwj7fpvxlvmtw3x35im
 - valory/termination_abci:0.1.0:bafybeid54buqxipiuduw7b6nnliiwsxajnltseuroad53wukfonpxca2om
-- valory/learning_abci:0.1.0:bafybeicskbvrgd7saf5eomglmfcilunuzqbd4jz2gj76oy4bbqudrx7eoq
+- valory/learning_abci:0.1.0:bafybeihpmsxqfuyucbrnj7gt2nrjcxtlh533ccfya352buixvn23mv6v7i
 - valory/transaction_settlement_abci:0.1.0:bafybeihq2yenstblmaadzcjousowj5kfn5l7ns5pxweq2gcrsczfyq5wzm
 behaviours:
   main:
@@ -139,7 +139,12 @@ models:
       default_chain_id: gnosis
       transfer_target_address: '0x0000000000000000000000000000000000000000'
       olas_token_address: '0xcE11e14225575945b8E6Dc0D4F2dD4C570f79d9f'
-      api_selection: ''
+      portfolio_address: null
+      api_selection: null
+      mock_contract_address: null
+      tokens_to_rebalance: null
+      target_percentages: null
+      variation_threshold: null
     class_name: Params
   coingecko_specs:
     args:
@@ -148,10 +153,10 @@ models:
         Accept: application/json
       method: GET
       parameters:
-        ids: autonolas
+        ids: null
         vs_currencies: usd
         x_cg_demo_api_key: null
-      response_key: autonolas
+      response_key: null
       response_type: dict
       retries: 5
       url: https://api.coingecko.com/api/v3/simple/price
@@ -163,7 +168,7 @@ models:
         Accept: application/json
       method: GET
       parameters:
-        symbol: OLAS
+        symbol: null
         convert: USD
         CMC_PRO_API_KEY: null
       response_type: dict

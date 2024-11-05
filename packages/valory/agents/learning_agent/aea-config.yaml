@@ -20,8 +20,6 @@ contracts:
 - valory/multisend:0.1.0:bafybeig5byt5urg2d2bsecufxe5ql7f4mezg3mekfleeh32nmuusx66p4y
 - valory/service_registry:0.1.0:bafybeieqgcuxmz4uxvlyb62mfsf33qy4xwa5lrij4vvcmrtcsfkng43oyq
 - valory/erc20:0.1.0:bafybeibk2y6ldylquuikk3cmtk64e2wnjbtuxy5doorzsp4ysx6uwqbdxm
-- valory/oracle:0.1.0:bafybeihnxwri2faiflv37xvfw44cqhe5zvdqrdwh4v25jj33imj53gcjsy
-- valory/simple_storage:0.1.0:bafybeiabjie564yuizzhwebmdcr55jxjfljqctyvjf4sfhoo64fmneronu
 protocols:
 - open_aea/signing:1.0.0:bafybeihv62fim3wl2bayavfcg3u5e5cxu3b7brtu4cn5xoxd6lqwachasi
 - valory/abci:0.1.0:bafybeiaqmp7kocbfdboksayeqhkbrynvlfzsx4uy4x6nohywnmaig4an7u
@@ -34,8 +32,8 @@ protocols:
 skills:
 - valory/abstract_abci:0.1.0:bafybeihu2bcgjk2tqjiq2zhk3uogtfszqn4osvdt7ho3fubdpdj4jgdfjm
 - valory/abstract_round_abci:0.1.0:bafybeibovsktd3uxur45nrcomq5shcn46cgxd5idmhxbmjhg32c5abyqim
-- valory/learning_abci:0.1.0:bafybeievybvw7xc4khox27anzpldzcrdhp5ihoe4eabc6xsinnfvcet3y4
-- valory/learning_chained_abci:0.1.0:bafybeicbzjuy73oe7paarmw7h7kwdmhw6sj2npa467leod2qqfg4kvm4z4
+- valory/learning_abci:0.1.0:bafybeihpmsxqfuyucbrnj7gt2nrjcxtlh533ccfya352buixvn23mv6v7i
+- valory/learning_chained_abci:0.1.0:bafybeid7hd3rw76cmuzh5awtizix3bonczxpw4kedawvpx6qb2oout4xtq
 - valory/registration_abci:0.1.0:bafybeicnth5q4httefsusywx3zrrq4al47owvge72dqf2fziruicq6hqta
 - valory/reset_pause_abci:0.1.0:bafybeievjciqdvxhqxfjd4whqs27h6qbxqzrae7wwj7fpvxlvmtw3x35im
 - valory/termination_abci:0.1.0:bafybeid54buqxipiuduw7b6nnliiwsxajnltseuroad53wukfonpxca2om
@@ -87,8 +85,8 @@ type: connection
 config:
   ledger_apis:
     ethereum:
-      address: ${str:https://misty-wider-scion.quiknode.pro/d69245a2666df926ff6573683b4dd7e81f7e60bf}
-      chain_id: ${int:1}
+      address: ${str:http://localhost:8545}
+      chain_id: ${int:31337}
       poa_chain: ${bool:false}
       default_gas_price_strategy: ${str:eip1559}
     gnosis:
@@ -192,15 +190,12 @@ models:
       termination_from_block: ${int:34088325}
       transfer_target_address: ${str:0x0000000000000000000000000000000000000000}
       olas_token_address: ${str:0xcE11e14225575945b8E6Dc0D4F2dD4C570f79d9f}
-      api_selection: coingecko
-      portfolio_address: ${str:0xFA1FC163deeaE7Bded993Cf9aFd4A4B9ae6b3639}
-      tokens_to_rebalance:
-      - ETH
-      - USDC
-      target_percentages:
-      - 80.0
-      - 20.0
-      variation_threshold: 3.0
+      api_selection: ${str:null}
+      portfolio_address: ${str:null}
+      mock_contract_address: ${str:null}
+      tokens_to_rebalance: ${list:[]}
+      target_percentages: ${list:[]}
+      variation_threshold: ${float:null}
   coingecko_specs:
     args:
       api_id: coingecko

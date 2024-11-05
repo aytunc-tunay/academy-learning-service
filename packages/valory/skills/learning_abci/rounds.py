@@ -40,7 +40,6 @@ from packages.valory.skills.learning_abci.payloads import (
     AlternativeDataPullPayload,
     DecisionMakingPayload,
     TxPreparationPayload,
-    AnotherTxPreparationPayload,
 )
 
 
@@ -182,7 +181,10 @@ class DataPullRound(CollectSameUntilThresholdRound):
     # Event.ROUND_TIMEOUT  # this needs to be referenced for static checkers
 
 class DecisionMakingRound(CollectSameUntilThresholdRound):
-    """DecisionMakingRound"""
+    """DecisionMakingRound
+        If the threshold is reached, retrieves and updates adjustment_balances in synchronized_data and triggers a TRANSACT event.
+        Returns NO_MAJORITY if a consensus cannot be reached or ERROR if data is missing. Returns None if voting continues.
+    """
 
     payload_class = DecisionMakingPayload
     synchronized_data_class = SynchronizedData
@@ -216,7 +218,7 @@ class DecisionMakingRound(CollectSameUntilThresholdRound):
                 )
             else:
                 self.context.logger.warning("Adjustment balances not found in payload.")
-                return self.synchronized_data, Event.ERROR
+                return self.synchronized_data, Event.DONE
 
             return new_synchronized_data, Event.TRANSACT
 
@@ -227,10 +229,10 @@ class DecisionMakingRound(CollectSameUntilThresholdRound):
 
         return None
 
-class AnotherTxPreparationRound(CollectSameUntilThresholdRound):
-    """AnotherTxPreparationRound"""
+class TxPreparationRound(CollectSameUntilThresholdRound):
+    """TxPreparationRound"""
 
-    payload_class = AnotherTxPreparationPayload
+    payload_class = TxPreparationPayload
     synchronized_data_class = SynchronizedData
     done_event = Event.DONE
     no_majority_event = Event.NO_MAJORITY
@@ -280,11 +282,11 @@ class LearningAbciApp(AbciApp[Event]):
             Event.ROUND_TIMEOUT: DecisionMakingRound,
             Event.DONE: FinishedDecisionMakingRound,
             Event.ERROR: FinishedDecisionMakingRound,
-            Event.TRANSACT: AnotherTxPreparationRound,
+            Event.TRANSACT: TxPreparationRound,
         },
-        AnotherTxPreparationRound: {
-            Event.NO_MAJORITY: AnotherTxPreparationRound,
-            Event.ROUND_TIMEOUT: AnotherTxPreparationRound,
+        TxPreparationRound: {
+            Event.NO_MAJORITY: TxPreparationRound,
+            Event.ROUND_TIMEOUT: TxPreparationRound,
             Event.DONE: FinishedTxPreparationRound,
         },
         FinishedDecisionMakingRound: {},
