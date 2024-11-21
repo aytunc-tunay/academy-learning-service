@@ -1,0 +1,31 @@
+name: simple_storage
+author: valory
+version: 0.1.0
+type: contract
+description: SimpleStorageContract contract for writing data.
+license: Apache-2.0
+aea_version: '>=1.0.0, <2.0.0'
+fingerprint:
+  README.md: bafybeig7bn4b2lybtf5liubkttxzds74telnxej6okrhdzrp4oh7u3ydgu
+  __init__.py: bafybeig54kwfnkvqeecyx3ufqf4qqlltntohlwzwuhvibef7rucgl7nbx4
+  build/simple_storage.json: bafybeicwgfy5zqjq72w4j2tsv2fnph2skkkurzypatvmledfd2mtuustwq
+  contract.py: bafybeif2b6dix73ancha5btksniqmn4eunbdggbjkaqjox3vo6stjxqfwu
+fingerprint_ignore_patterns: []
+contracts: []
+class_name: SimpleStorage
+contract_interface_paths:
+  ethereum: build/simple_storage.json
+dependencies:
+  ecdsa:
+    version: '>=0.15'
+  eth_typing: {}
+  hexbytes: {}
+  open-aea-ledger-ethereum:
+    version: ==1.55.0
+  open-aea-test-autonomy:
+    version: ==0.15.2
+  packaging: {}
+  requests:
+    version: ==2.28.1
+  web3:
+    version: <7,>=6.0.0

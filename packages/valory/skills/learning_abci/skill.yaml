@@ -7,18 +7,20 @@ license: Apache-2.0
 aea_version: '>=1.0.0, <2.0.0'
 fingerprint:
   __init__.py: bafybeiho3lkochqpmes4f235chq26oggmwnol3vjuvhosleoubbjirbwaq
-  behaviours.py: bafybeiaiy6sh7aqo4zzghnejv55vs43vqtpaipj5cpabx32qdjrqleeeie
+  behaviours.py: bafybeib4mxggw3u6wfluonjmaodcovxchqr2mp5kkhciy7wyrwfdqallrm
   dialogues.py: bafybeifqjbumctlffx2xvpga2kcenezhe47qhksvgmaylyp5ypwqgfar5u
   fsm_specification.yaml: bafybeigbbydxuqephdpatb3fp3sxnvr77bfvvo5hwjimxfpgyl32wupe64
   handlers.py: bafybeigjadr4thz6hfpfx5abezbwnqhbxmachf4efasrn4z2vqhsqgnyvi
-  models.py: bafybeicreffhurci7jzpwvxnlo5z3a2j3vcfgkopg2gtwwxfrncbzk77ra
-  payloads.py: bafybeidc6qqnfvd7qovjatt2i2kbga7pj6epdghlzqxdhzx6b6j6p7ubvm
-  rounds.py: bafybeibcxdou2opzsof4fcnaijfdgzpaaggmucyolhegns3k4zpzvuom2i
+  models.py: bafybeicwsirrf6pxfy3kjbemgjaebzxr6r3o662glwaydbsf5toa42tcqm
+  payloads.py: bafybeidaoav4hgdz24rdngywialhk63hcufvdhgywjz4w64hcanvifmz2e
+  rounds.py: bafybeihy7anqoaipuxw35cwndeek2ojklu4wnondosn3mxbeghh6ddeoia
 fingerprint_ignore_patterns: []
 connections: []
 contracts:
 - valory/gnosis_safe:0.1.0:bafybeiho6sbfts3zk3mftrngw37d5qnlvkqtnttt3fzexmcwkeevhu4wwi
 - valory/erc20:0.1.0:bafybeibk2y6ldylquuikk3cmtk64e2wnjbtuxy5doorzsp4ysx6uwqbdxm
+- valory/oracle:0.1.0:bafybeihnxwri2faiflv37xvfw44cqhe5zvdqrdwh4v25jj33imj53gcjsy
+- valory/simple_storage:0.1.0:bafybeiabjie564yuizzhwebmdcr55jxjfljqctyvjf4sfhoo64fmneronu
 - valory/multisend:0.1.0:bafybeig5byt5urg2d2bsecufxe5ql7f4mezg3mekfleeh32nmuusx66p4y
 protocols:
 - valory/contract_api:1.0.0:bafybeidgu7o5llh26xp3u3ebq3yluull5lupiyeu6iooi2xyymdrgnzq5i
@@ -131,6 +133,7 @@ models:
       transfer_target_address: '0x0000000000000000000000000000000000000000'
       olas_token_address: '0xcE11e14225575945b8E6Dc0D4F2dD4C570f79d9f'
       multisend_address: '0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761'
+      api_selection: ''
     class_name: Params
   coingecko_specs:
     args:
@@ -147,6 +150,21 @@ models:
       retries: 5
       url: https://api.coingecko.com/api/v3/simple/price
     class_name: CoingeckoSpecs
+  coinmarketcap_specs:
+    args:
+      api_id: coinmarketcap
+      headers:
+        Accept: application/json
+      method: GET
+      parameters:
+        symbol: OLAS
+        convert: USD
+        CMC_PRO_API_KEY: null
+      response_type: dict
+      response_key: data
+      retries: 5
+      url: https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest
+    class_name: CoinMarketCapSpecs
   requests:
     args: {}
     class_name: Requests
